@@ -17,9 +17,22 @@ app.config(['$routeProvider', function($routeProvider) {
 }]);
 
 app.config(['AuthServiceProvider', function(AuthServiceProvider){
+
+	  function determineRedirectUri() {// allows us to not have to change the client id every time we move environments
+		  	var cs = 'http://students.cs.byu.edu/~cmccord/contractWork/captionEditor',
+				local = 'https://localhost/contractWork/captionEditor';
+			console.log(window.location)
+			if (window.location.host === 'localhost')
+				return local;
+			if (window.location.host === 'students.cs.byu.edu')
+				return cs;
+
+			throw new Error("App is running in an unknown environment. Please check URL");
+		}
+		
 		AuthServiceProvider.setClientID('185872110398-icdle47mq6dtff0ktdpc7qrpojkh5jrj.apps.googleusercontent.com');
-		AuthServiceProvider.pushScope('https://www.googleapis.com/auth/plus.me') ;
-		AuthServiceProvider.setRedirectURI('https://localhost/captionEditor');
+		AuthServiceProvider.pushScope('https://www.googleapis.com/auth/plus.me');
+		AuthServiceProvider.setRedirectURI(determineRedirectUri());
 }]);
 
 
