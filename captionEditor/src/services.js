@@ -1,6 +1,6 @@
 angular.module('CaptionServices', [])
-// .value("serverPath", "http://salesmanbuddytest1.elasticbeanstalk.com/v1/salesmanbuddy/")
-.value("serverPath", "http://localhost:8080/salesmanBuddy/v1/salesmanbuddy/")
+.value("serverPath", "http://salesmanbuddytest1.elasticbeanstalk.com/v1/salesmanbuddy/")
+// .value("serverPath", "http://localhost:8080/salesmanBuddy/v1/salesmanbuddy/")
 .value("languagesPath", "languages")
 .value("mediaPath", "media")
 .value("captionPath", "captions")
