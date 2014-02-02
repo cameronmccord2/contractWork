@@ -1,0 +1,3 @@
+function indexCtrl($scope, $rootScope){
+
+}

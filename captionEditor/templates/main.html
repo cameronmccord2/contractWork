@@ -1,0 +1,150 @@
+<div ng-hide="loading">
+	<div class="mLeft" id="angular-area">
+		<div class="mLeftTitle">Options</div>
+		<div class="mChangeVideoButton" ng-click="openChangeVideoModal()">Change Video</div>
+		<img src="assets/options_line.png">
+		<div style="float:left">Choose video: {{video.data.filename}}</div>
+		<input type="file" ng-model="selectedFile" accept="video/mp4" app-filereader ng-change="selectedVideoFile(selectedFile)" />
+		<div ng-show="fileErrorMessage.length" style="color:red;">{{fileErrorMessage}}</div>
+		<!-- <div class="mLeftSubTitle">Select editing mode:</div> -->
+		<!-- <select ng-model="edit.mode" ng-options="mode as mode.title for mode in editModes" ng-change="changedEditMode(edit.mode.type)"></select> -->
+		<div ng-switch on="routeValues.how">
+			<div ng-switch-when="modify">
+				<div class="mLeftSubTitle">Select language to edit:</div>
+				<select ng-model="edit.language" ng-options="language as language.name for language in video.captions.languages" ng-change="setMainCaptions(edit.language.name)"></select>
+				<!-- <div class="mLeftSubTitle">Select reference language:</div>
+				<select ng-model="edit.referenceLanguage" ng-options="language as language.fullLang for language in video.captions.languages" ng-change="setReferenceCaptions(edit.referenceLanguage.lang)"></select> -->
+				<div class="mDownloadBackup" ng-click="prepareDownloadCaptionBackupModal()">Download a Backup</div>
+				<!-- <div class="mDownloadBackup" ng-click="prepareUploadCaptionModal()">Upload a backup</div> -->
+				<div class="mDontChangeWarning" ng-show="showDontChangeWarning">Dont change these settings. Doing so will erase your current changes.</div>
+				<div class="mErrorOnHoverMessage" ng-show="showErrorOnHoverMessage">Hover over the red below to see the error message.</div>
+			</div>
+			<div ng-switch-when="new">
+				<!-- <div class="mLeftSubTitle">Select language to translate from:</div>
+				<select ng-model="edit.referenceLanguage" ng-options="language as language.fullLang for language in video.captions.languages" ng-change="setReferenceCaptions(edit.referenceLanguage.lang)"></select> -->
+				<div class="mLeftSubTitle">Select language for the new translation:</div>
+				<select ng-model="edit.language" ng-options="language as language.name for language in allLanguages" ng-change="setMainCaptions(edit.language.name)"></select>
+				<div class="mDontChangeWarning" ng-show="showDontChangeWarning">Dont change these settings. Doing so will erase your current changes.</div>
+				<div class="mErrorOnHoverMessage" ng-show="showErrorOnHoverMessage">Hover over the red below to see the error message.</div>
+			</div>
+		</div>
+	</div>
+	<!-- <video videojs id="mainVideo" class="video-js vjs-default-skin" width="575" height="351" /*data-setup='{ "controls":true, "autoplay":true, "preload":"none", "playerFallbackOrder": ["html5", "flash", "links"] }'*/>
+		<source id="videoSource" type="video/mp4">
+	</video> -->
+	<video id="mainVideo2" class="mainVideo2Style" controls></video>
+	<div class="mAboveBottom" ng-class="getCaptionTypeClass()" ng-show="validFileSelected">{{captionShowing.text}}</div>
+	<div class="mBottom" ng-show="validFileSelected">
+		<div class="mBottom1">
+			<div class="mClickToSeek">Click to Seek:</div>
+			<div class="mClickRadio"><input type="radio" name="clickToSeekOn" ng-model="edit.clickToSeek" value="on" class="mRadio" checked="checked">On</div>
+			<div class="mClickRadio"><input type="radio" name="clickToSeekOff" ng-model="edit.clickToSeek" value="off" class="mRadio">Off</div>
+			<div class="mClickToSeek">&nbsp&nbsp&nbsp&nbspShow Test Results:</div>
+			<div class="mClickRadio"><input type="radio" name="showTestResultsOn" ng-model="edit.showTestResults" value="yes" class="mRadio" checked="checked">Yes</div>
+			<div class="mClickRadio"><input type="radio" name="showTestResultsOff" ng-model="edit.showTestResults" value="no" class="mRadio">No</div>
+			<!-- <button ng-click="endTimesToStartTimes()" name="endTimesToStartTimesButton" class="mEndToStartTimes" title="Extend all end times to be the same as the start times of the next caption">End Times to Start Times</button> -->
+			<div style="float:right;">{{saveMessage}}</div>
+			<button ng-click="submitCaptions()" name="submitCaptionsButton" class="mSubmitCaptions" title="Submit the current captions to the server">Submit Captions</button>
+		</div>
+
+		<div ng-switch on="routeValues.refLang">
+			<div ng-switch-default>
+				<div class="mBottom1">
+					<div class="mColumnTitle1">Start Time</div>
+					<div class="mColumnTitle2">End Time</div>
+					<div class="mColumnTitle3">{{edit.language.fullLang}}</div>
+					<div class="mColumnTitle5">Reference: {{edit.referenceLanguage.fullLang}}</div>
+				</div>
+				<div class="mBottomCaptionArea" id="captionArea">
+					<form>
+					<div ng-repeat="caption in edit.activeEdit">
+						<div class="mCaptionRow">
+							<input type="text" id="starttimeRef{{$index}}" name="starttime{{$index}}" ng-model="caption.starttime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-focus="videoToThisTime(caption.starttime)" on-blur="convertQuickTime('start', $index)" on-up-arrow="upArrow($index, true)" on-down-arrow="downArrow($index, true)" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'starttime')" title="{{caption.startTimeErrorMessage}}" ng-show="caption.showText">
+
+							<input type="text" id="endtimeRef{{$index}}" name="endtime{{$index}}" ng-model="caption.endtime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-blur="convertQuickTime('end', $index)" on-up-arrow="upArrow($index, false)" on-down-arrow="downArrow($index, false)" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'endtime')" title="{{caption.endTimeErrorMessage}}" ng-show="caption.showText">
+
+							<div class="mBlankReferenceSpace" ng-show="showAddRemove(!caption.showText)"></div>
+							<div class="mCaptionField">
+								<input type="text" name="caption{{$index}}" ng-model="caption.text" placeholder="Caption" class="mCaptionWithReference" maxlength="200" ng-show="caption.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'caption')" title="{{caption.textErrorMessage}}" on-tab="tabInCaptionField($index)">
+								<img ng-click="addRowInMiddle($index)" class="mAddButton" src="assets/btnAdd.png" onmousedown="this.src='assets/btnAddActive.png'" onmouseup="this.src='assets/btnAdd.png'" onmouseout="this.src='assets/btnAdd.png'" ng-show="showAddRemove(caption.showText)" title="Add new row after this row">
+								<img ng-click="removeRow($index)" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(caption.showText)" title="Remove this row">
+								<img ng-click="undoRemove($index)" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!caption.showText)" title="Undo row removal">
+							</div>
+							<div class="mCaptionFieldReference">
+								<input type="text" ng-model="caption.refText" placeholder="Reference Caption" class="mReferenceCaption" maxlength="200" ng-show="caption.showRefText" ng-change="setDontChangeSettings()">
+							</div>
+						</div>
+						<div style="clear:left"></div>
+					</div>
+					</form>
+					<div style="clear:left"></div>
+					<button style="width:100%" ng-click="addRowAtEnd()" ng-hide="routeValues.lang == 'none'">New Row</button>
+				</div>
+			</div>
+			<div ng-switch-when="none">
+				<div class="mBottom1">
+					<div class="mColumnTitle1">Start Time</div>
+					<div class="mColumnTitle2">End Time</div>
+					<div class="mColumnTitle4">{{edit.language.fullLang}}</div>
+				</div>
+				<div class="mBottomCaptionArea" id="captionArea">
+					<form>
+					<div ng-repeat="caption in edit.activeEdit">
+						<div class="mCaptionRow">
+							<input type="text" id="starttime{{$index}}" name="starttime{{$index}}" ng-model="caption.starttime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-focus="videoToThisTime(caption.starttime)" on-blur="convertQuickTime('start', $index)" on-up-arrow="upArrow($index, true)" on-down-arrow="downArrow($index, true)" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'starttime')" title="{{caption.startTimeErrorMessage}}" ng-show="caption.showText">
+							<input type="text" id="endtime{{$index}}" name="endtime{{$index}}" ng-model="caption.endtime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-blur="convertQuickTime('end', $index)" on-up-arrow="upArrow($index, false)" on-down-arrow="downArrow($index, false)" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'endtime')" title="{{caption.endTimeErrorMessage}}" ng-show="caption.showText">
+							<input type="text" name="caption{{$index}}" ng-model="caption.text" placeholder="Caption" class="mCaptionWithReferenceLong" maxlength="300" ng-show="caption.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'caption')" title="{{caption.textErrorMessage}}" on-tab="tabInCaptionField($index)">
+							<select ng-show="caption.showText" ng-model="caption.typeObject" ng-options="type  as type.name for type in captionTypes"></select>
+							<img ng-click="addRowInMiddle($index)" class="mAddButton" src="assets/btnAdd.png" onmousedown="this.src='assets/btnAddActive.png'" onmouseup="this.src='assets/btnAdd.png'" onmouseout="this.src='assets/btnAdd.png'" ng-show="showAddRemove(caption.showText)" title="Add new row after this row">
+							<img ng-click="removeRow($index)" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(caption.showText)" title="Remove this row">
+							<img ng-click="undoRemove($index)" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!caption.showText)" title="Undo row removal">
+						</div>
+					</div>
+				</form>
+					<button style="width:100%" ng-click="addRowAtEnd()" ng-hide="routeValues.lang == 'none'">New Row</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div ng-show="modalFlags.showJsonUploadModal || modalFlags.showJsonCopyModal" class="mModalCloseJsonUpload">
+		<div class="mChangeVideoModal">
+			<div class="mModalCloseButton" ng-click="closeCaptionModal()"><img class="mModalCloseButtonImage" ng-click="closeCaptionModal()" src="assets/exit.png"></div>
+			<div class="mModalTitle2">{{modalMessages.jsonTitle}}</div>
+			<div class="mMessage">{{modalMessages.jsonMessage}}</div>
+			<textarea type="text" class="mTextArea2" name="jsonUploadText" ng-model="jsonStringOfBackupText" ng-change="makeSureBackupIsValid()" spellcheck="false" placeholder="Backup Text Here"></textarea>
+			<div ng-class="classForJsonValidity()">{{jsonUploadErrorMessage}}</div>
+		</div>
+	</div>
+	<div ng-show="modalFlags.submitModalStatus != 'dontShow'" class="mModalCloseJsonUpload">
+		<div class="mPasswordModal" ng-switch on="modalFlags.submitModalStatus">
+			<div class="mModalCloseButton" ng-click="closeSubmitModal()"><img class="mModalCloseButtonImage" ng-click="closeSubmitModal()" src="assets/exit.png"></div>
+			<div ng-switch-when="askPassword">
+				<div class="mModalTitle2">Enter Password</div>
+				<div class="mMessage">Please enter the submission password</div>
+				<input class="mPasswordInput" type="password" name="mPassword" ng-model="submissionPassword" spellcheck="false" placeholder="Password Here" on-enter="sendCaptions(submissionPassword)">
+				<button class="mPasswordSubmitButton" ng-click="sendCaptions(submissionPassword)">Submit</button>
+				<button class="mPasswordSubmitButton" ng-click="closeSubmitModal()">Close</button>
+			</div>
+			<div ng-switch-when="invalidPassword">
+				<div class="mModalTitle2">Reenter Password</div>
+				<div class="mMessage">The password was incorrect. Please enter the correct password</div>
+				<input class="mPasswordInput" type="password" name="mPassword" ng-model="submissionPassword" spellcheck="false" placeholder="Password Here">
+				<button class="mPasswordSubmitButton" ng-click="sendCaptions(submissionPassword)">Submit</button>
+				<button class="mPasswordSubmitButton" ng-click="closeSubmitModal()">Close</button>
+			</div>
+			<div ng-switch-when="sending">
+				<div class="mModalTitle3">Sending data, please wait</div>
+			</div>
+			<div ng-switch-when="success">
+				<div class="mModalTitle3">Data was successfully saved</div>
+				<button class="mPasswordSubmitButton" ng-click="closeSubmitModal()">Close</button>
+			</div>
+			<div ng-switch-when="error">
+				<div class="mModalTitle2">Submission Error</div>
+				<div class="mMessage">There was an error with submission. Please make a backup of your changes and try again later</div>
+				<button class="mPasswordSubmitButton" ng-click="closeSubmitModal(true)">Backup Data</button>
+				<button class="mPasswordSubmitButton" ng-click="closeSubmitModal()">Close</button>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,418 @@
+.mLeft{
+	width: 270px;
+	height: 300px;
+	display: block;
+	padding: 25px 20px 25px 20px;
+	font-family: sans-serif;
+	color: #444;
+	float:left;
+	background-color: #F5F5F5;
+	border: 1px solid #e3e3e3;
+	border-radius: 5px;
+}
+.mRight{
+	float: left;
+	width: 550px;
+	height: 350px;
+	margin-left: 30px;
+	background-color: black;
+}
+.mLeftTitle{
+	float:left;
+	font-family: sans-serif;
+	font-weight: normal;
+	font-size: 20px;
+	color: #444;
+	margin-top: -10px;
+}
+.mLeftSubTitle, .mDontChangeWarning{
+
+}
+.mainVideo2Style{
+	float: left;
+	width: 480px;
+	margin-left: 70px;
+}
+.mDontChangeWarning{
+	color:red;
+}
+.mDownloadBackup{
+	color: rgb(24, 24, 175);
+	cursor: pointer;
+}
+
+
+
+
+.mAboveBottom{
+	float: left;
+	width: 480px;
+	margin-left: 382px;
+	height: 40px;
+}
+.bottomSubtitle{
+	text-align: center;
+}
+.topSubtitle{
+	text-align: center;
+}
+.rightSubtitle{
+	text-align: right;
+}
+.leftSubtitle{
+	text-align: left;
+}
+.hardRightSubtitle{
+	text-align: right;
+	width: 240px;
+	margin-left: 622px;
+}
+.hardLeftSubtitle{
+	text-align: left;
+	width: 240px;
+}
+.mBottom{
+	float:left;
+	width: 912px;
+	margin-top: 30px;
+	height: 350px;
+	background-color: #F5F5F5;
+	border: 1px solid #e3e3e3;
+	border-radius: 5px;
+}
+.mBottom1{
+	float:left;
+	background-color: #f5f5f5;
+	height: 25px;
+	width: 100%;
+	border: none;
+	border-bottom: 3px solid #444;
+	padding: 6px 0px 4px 0px;
+}
+.mClickToSeek{
+	float: left;
+	margin-left: 10px;
+}
+.mRadio{
+	float:left;
+}
+.mEndToStartTimes{
+	float: right;
+	height: 25px;
+	width: 190px;
+	display: inline-block;
+	margin: auto 10px;
+	margin-top: -2px;
+	font-family: sans-serif;
+	font-size: 15px;
+	color: #444;
+	cursor: pointer;
+}
+.mSubmitCaptions{
+	float: right;
+	height: 25px;
+	width: 150px;
+	display: inline-block;
+	margin: auto 10px;
+	margin-top: -2px;
+	font-family: sans-serif;
+	font-size: 15px;
+	color: #444;
+	cursor: pointer;
+}
+.mColumnTitle1{
+	float:left;
+	width: 75px;
+	display: inline;
+	margin: 0px 0px 0px 15px;
+	margin-top: 6px;
+	font-family: sans-serif;
+	color: #444;
+}
+.mColumnTitle2{
+	float:left;
+	width: 80px;
+	margin-left: -5px;
+	display: inline;
+	margin: auto 10px;
+	margin-top: 6px;
+	font-family: sans-serif;
+	color: #444;
+}
+.mColumnTitle3{
+	float:left;
+	padding-left: 120px;
+	padding-right: 150px;
+	display: inline;
+	margin: auto 10px;
+	margin-top: 6px;
+	font-family: sans-serif;
+	color: #444;
+}
+.mColumnTitle5{
+	float:left;
+	padding-left: 125px;
+	display: inline;
+	margin: auto 10px;
+	margin-top: 6px;
+	font-family: sans-serif;
+	color: #444;
+}
+.mColumnTitle4{
+	float:left;
+	padding-left: 310px;
+	display: inline;
+	margin-top: 4px;
+	margin-top: 6px;
+	font-family: sans-serif;
+	color: #444;
+}
+.mBottomCaptionArea{
+	overflow: auto;
+	width: 100%;
+	height: 279px;
+	background-color:#f5f5f5;
+}
+.mTimeField{
+	float: left;
+	width: 75px;
+	margin: 2px 0px 2px 10px;
+	display: inline;
+	border: 1px solid #999;
+}
+.mClickRadio{
+	float: left;
+	margin-left: 10px;
+}
+.mCaptionWithReference{
+	float: left;
+	width: 318px;
+	border: 1px solid #999;
+	margin-top: 4px;
+}
+.mCaptionWithReferenceLong{
+	float: left;
+	width: 500px;
+	border: 1px solid #999;
+	margin: 2px 2px 2px 15px;
+}
+.mReferenceCaption{
+	float: left;
+	width: 326px;
+	border: 1px solid #999;
+	margin-top: 4px;
+}
+.mCaptionWithoutReference{
+	float:left;
+	margin: 4px 0px 0px 20px;
+	width: 77%;
+	border: 1px solid #999;
+}
+.mChangeVideoButton{
+	float: right;
+	cursor: pointer;
+	color: rgb(24, 24, 175);
+	margin-top: -10px;
+}
+.mCaptionRow{
+	float: left;
+	width: 893px;
+}
+.mCaptionField{
+	width: 366px;
+	height: 26px;
+	float: left;
+	margin-left: 20px;
+}
+.mCaptionFieldLong{
+	width: 690px;
+	height: 26px;
+	float: left;
+	margin-left: 20px;
+}
+.mCaptionFieldReference{
+	width: 330px;
+	height: 26px;
+	float: left;
+}
+.mAddButton{
+	cursor:pointer;
+	float:left;
+	margin: 2px 0px 2px 0px;
+}
+.mRemoveButton{
+	cursor:pointer;
+	float:left;
+	margin: 2px 0px 2px 2px;
+}
+.mUndoButton{
+	cursor: pointer;
+	float: right;
+	margin: 2px 4px 2px 0px;
+}
+.mMainVideo{
+
+}
+#mainVideo{
+	position: relative;
+	float:left;
+	left: 7px;
+	width: 575px;
+	height: 351px;
+	margin-left: 20px;
+	background-color: black;
+}
+.mFieldError {
+	background-color: rgba(240, 128, 128, 0.71);
+}
+.mFieldValid{
+	background-color: rgba(155, 255, 47, 0.5);
+}
+.mBlankReferenceSpace{
+	width: 174px;
+	float: left;
+	height: 20px;
+}
+/* Password Modal*/
+.mPasswordModal{
+	position: relative;
+	top:10%;
+	margin-left: auto;
+	margin-right: auto;
+	width:500px;
+	background-color: white;
+	height: 300px;
+	border: 5px solid #566;
+}
+.mPasswordInput{
+	float:left;
+	margin-left: 40px;
+}
+.mPasswordSubmitButton{
+	float:left;
+	margin: 80px 0px 0px 0px;
+}
+/* Change Video Modal CSS*/
+.mChangeVideoModal{
+	position: relative;
+	top: 5%;
+	margin-left: auto;
+	margin-right: auto;
+	width: 600px;
+	background-color: #F5F5F5;
+	height: 600px;
+	border: 5px solid #6D6D6D;
+	background-color: #f5f5f5;
+	border: 1px solid #e3e3e3;
+	border-radius: 5px;
+	padding: 20px;
+}
+.mModalCloseBackground{
+	position: fixed;
+	top:0px;
+	left:0px;
+	width: 100%;
+	height: 100%;
+	margin-top: 50px;
+}
+.mModalCloseJsonBackup{
+	position: fixed;
+	top:0px;
+	left:0px;
+	background-color: rgba(0,0,0,0.2);
+	width: 100%;
+	height: 100%;
+}
+.mModalCloseJsonUpload{
+	position: fixed;
+	top:0px;
+	left:0px;
+	background-color: rgba(0,0,0,0.2);
+	width: 100%;
+	height: 100%;
+}
+.mModalCloseButton{
+	width: 20px;
+	position: relative;
+	top:5px;
+	right:5px;
+	float:right;
+}
+.mModalTitle, .mModalTitle2, .mModalTitle3{
+	float: left;
+	color: #333;
+	font-size: 24px;
+	font-weight: bold;
+	font-family: Tahoma;
+	margin: 5px 0px 10px 147px;
+	width: 420px;
+}
+.mModalTitle2{
+	margin: 5px 0px 10px 170px;
+}
+.mModalTitle3{
+	margin-left: 115px;
+}
+.mAllVideosList{
+	float: left;
+	width: 500px;
+	margin-left: 8px;
+}
+.mVideoAttribute{
+	clear:left;
+	width:100%;
+	color: #333;
+}
+.mMessage{
+	width: 95%;
+	float:left;
+	margin-left: 10px;
+}
+.mTextArea{
+	float: left;
+	width: 95%;
+	height: 84%;
+	margin-left: 2%;
+}
+.mTextArea2{
+	float: left;
+	width: 95%;
+	height: 74%;
+	margin-left: 2%;
+}
+.mGreen{
+	color: green;
+	float: left;
+	margin-left: 10px;
+}
+.mRed{
+	color: red;
+	float: left;
+	margin-left: 10px;
+}
+
+.mVideoAttributesList{
+	margin: 40px 0px 0px 10px;
+}
+.mTypeId{
+	width: 35px;
+	float: left;
+	margin-left: 5px;
+}
+.mOR{
+	float:left;
+	margin: 2px 0px 0px 8px;
+}
+.mSelectTheVideo{
+
+}
+.mErrorMessage{
+	color: red;
+	font-size: 24px;
+	float: left;
+}
+.mErrorOnHoverMessage{
+	color: black;
+	background-color: rgba(240, 128, 128, 0.71);
+	border: 1px solid black;
+}

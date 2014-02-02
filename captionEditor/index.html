@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="MEDIAPORTALCAPTIONEDITOR">
+<head>
+    <meta charset="utf-8">
+    <title>Caption Editor 0.0.2</title>
+    <link href="css/index.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/video-js.min.custom.css" rel="stylesheet">
+
+
+
+
+</head>
+
+<body class="iBackground">
+    <!--[if gte IE 9]>
+        <style type="text/css">
+            .iefix {
+                filter: none;
+            }
+        </style>
+    <![endif]-->
+<div class="header">
+    <!-- <img class="logo" src="assets/logo.png"> -->
+    <!-- <div class="title">Media Portal Caption Editor</div> -->
+    <div class="iLogoutBox" id="indexCtrlId">
+        <a class="iLogout" ng-click="logout()">Log Out</a>
+        <!-- <a class="iFaqHelp">Faq/Help</a> -->
+    </div>
+    <div class="clear"></div>
+</div>
+<div class="iContent">
+    <div ng-view></div>
+</div>
+
+    <script src="lib/angular.js"></script>
+    <script src="lib/angular-route.min.js"></script>
+    <script src="src/auth.js"></script>
+    <!-- Start db/security required stuff -->
+    <!-- <script src="lib/angular-resource.min.js"></script>For ngResource -->
+    <!-- <script src="https://cdn.mtc.byu.edu/global/auth.js"></script> -->
+    <script src="src/services.js"></script>
+    <script src="src/directives.js"></script>
+    <script src="lib/json2.min.js"></script>
+    <script src="lib/modernizr.min.js"></script>
+    <script src="lib/localstorage.js"></script>
+    <script src="lib/jso.js"></script>
+    <!-- // <script src="src/src/captionEditorOAuthconfig.js"></script> -->
+    <!-- End db/security required stuff -->
+    <script src="lib/jquery-1.9.1.min.js"></script>
+    <!-- Begin controllers -->
+    <script src="src/app/app.js"></script>
+    <script src="src/app/videojsDirective.js"></script>
+    <script src="src/controllers/mainCtrl.js"></script>
+    <script src="src/controllers/selectVideoCtrl.js"></script>
+    <script src="src/controllers/indexCtrl.js"></script>
+    <!-- End controllers -->
+    <!--<script src="lib/video.custom.js" type="text/javascript"></script>-->
+</body>
+</html>

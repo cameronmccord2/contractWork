@@ -1,0 +1,51 @@
+<div class="mModalCloseBackground">
+	<div class="mChangeVideoModal">
+		<!-- <div class="mModalCloseButton" ng-click="closeChangeVideoModal()"><img class="mModalCloseButtonImage" ng-click="closeChangeVideoModal()" src="assets/exit.png"></div> -->
+		<div class="mModalTitle">Select/Change Current Video</div>
+		<div class="clear"></div>
+<!-- break this up into video /audio? -->
+		Select existing media to edit:
+		<select ng-model="selectedMedia" ng-options="media as media.name for media in allMedia"></select>
+		<button ng-click="useThisMedia(selectedMedia)">Edit this media</button>
+		<div class="clear"></div>
+		Name: {{selectedMedia.name}}<br>
+		Filename: {{selectedMedia.filename}}<br>
+		Type: {{getMediaType(selectedMedia.type)}}<br>
+		Primary Audio Language: {{languageNameForId(selectedMedia.audioLanguageId)}}<br>
+		<br><br><br><br>
+
+
+		Add subtitles to new media
+		<input ng-model="newMedia.name" placeholder="Name" maxlength="100"><br>
+		Filename: {{newMedia.filename}}<br>
+		Type: {{newMedia.stringType}}<br>
+		Primary Audio Language: <select ng-model="newMedia.audioLanguage" ng-options="language as language.name for language in languages"></select><br>
+
+		<input type="file" ng-model="file" accept="video/mp4" app-filereader ng-change="selectedFile(file)"/>
+		<div ng-show="errorMessage.length" style="color:red;">{{errorMessage}}</div>
+		<div class="clear"></div>
+		<button ng-click="saveNewMedia(newMedia)">Save new media to database</button>
+		<!-- <video id="videoPlayer" type="{{dummy.type}}" ng-src="{{dummy.url}}" ng-src controls> -->
+		
+ 
+		<!-- <div class="mSelectTheVideo">
+			<input name="typeId" type="text" maxlength="4" ng-model="video.typedId" ng-change="loadTypeIdVideo()" class="mTypeId" placeholder="Id #" autofocus="true" on-enter="closeChangeVideoModal()">
+			<select ng-model="preferedLanguage" ng-options="language as language.fullLang for language in allLanguages" class="mAllVideosList" ng-hide='true' ng-change="filterVideosByThisLanguage(preferedLanguage)">
+				<option value="">All Languages</option>
+			</select>
+			<div class="mOR"> or </div>
+			<select ng-model="video" ng-options="video as video.listTitle for video in allVideos" class="mAllVideosList" ng-change="loadSelectVideo()" on-enter="closeChangeVideoModal()">
+				<option value="">- - - - - Select Video - - - - -</option>
+			</select>
+		</div>
+		<div class="mVideoAttributesList">
+			<div class="mVideoAttribute"><b>Id:</b> {{video.id}}</div>
+			<div class="mVideoAttribute"><b>Type:</b> {{video.type}}</div>
+			<div class="mVideoAttribute"><b>Title:</b> {{video.title}}</div>
+			<div class="mVideoAttribute"><b>Description:</b> {{video.description}}</div>
+			<div class="mVideoAttribute"><b>Color:</b> {{video.color}}</div>
+			<div class="mVideoAttribute"><b>Current languages with subtitles:</b> {{captionList}}</div>
+			<div class="mErrorMessage" ng-show="showErrorMessage">{{errorMessage}}</div>
+		</div> -->
+	</div>
+</div>
