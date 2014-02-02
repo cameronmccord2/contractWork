@@ -1288,7 +1288,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 			else{
 				if($scope.edit.activeEdit[index].starttime != undefined && $scope.edit.activeEdit[index].starttime != ''){
 					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeLessThan($scope.edit.activeEdit[index].starttime, 0, "seconds");
-					// $scope.videoToThisTime($scope.edit.activeEdit[index].starttime);
+					$scope.videoToThisTime($scope.edit.activeEdit[index].endtime);
 				}else
 					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
 			}
