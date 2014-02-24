@@ -42,7 +42,14 @@
 }
 
 
-
+.popupPreviewModal{
+	width: 500px;
+	position: absolute;
+	height: 500px;
+	z-index: 100;
+	background-color: white;
+	border: 1px solid;
+}
 
 .mAboveBottom{
 	float: left;

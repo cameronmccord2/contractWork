@@ -1,4 +1,4 @@
-function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeout, languagesFactory, mediaFactory, captionsFactory){
+function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeout, languagesFactory, mediaFactory, captionsFactory, bucketsFactory, popupsFactory){
 
 	$scope.loading = true;
 	$scope.validFileSelected = false;
@@ -22,6 +22,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 
 	$scope.video = new Object();
 	$scope.video.captions = new Object();
+	$scope.video.popups = new Object();
 	$scope.modalFlags = new Object();
 	$scope.modalFlags.showChangeVideoModal = true;
 	$scope.modalFlags.showJsonCopyModal = false;
@@ -31,6 +32,9 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	$scope.modalMessages = new Object();
 	$scope.showDontChangeWarning = false;
 	$scope.showErrorOnHoverMessage = false;
+
+	$scope.showPopupEditor = false;
+	$scope.showCaptionEditor = true;
 
 	$scope.captionTypes = [
 		{name:'Bottom', value:1, class:'bottomSubtitle'},
@@ -72,6 +76,14 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		'refLang':$routeParams.refLang
 	}
 
+	// trainer notes
+	// add tests for displayName validity, currently always valid
+	// make popup previewer
+	// make popups list by video at right time
+
+
+
+
 	/* mainCtrl Notes************************************************************************************
 	Controller initialization functions are at the very end
 	$scope.tests has all the unit tests and field tests
@@ -100,21 +112,35 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	// 	console.log("$http: getVideoDetails", data, status, headers, config);
 	// });
 
-	$scope.selectedVideoFile = function(file){
-		console.log(file)
-		$scope.fileErrorMessage = "";
-		// $scope.$apply();
-		if(file.name != $scope.video.data.filename){
-			$scope.fileErrorMessage = "You must select the file with the same name as what the database has. Has: " + $scope.video.data.filename + ", you selected: " + file.filename;
-			return;
-		}else{
-			console.log("going herre")
-			$scope.videoCommand("addSource", file.realFileName);
-			$scope.videoCommand("setup");
-			$scope.videoCommand("load");
-			$scope.videoCommand("addTimeUpdate", $scope.showSubtitleForTime);
-			$scope.prepareVideo();
-		}
+	// $scope.selectedVideoFile = function(file){
+	// 	console.log(file)
+	// 	$scope.fileErrorMessage = "";
+	// 	// $scope.$apply();
+	// 	if(file.name != $scope.video.data.filename){
+	// 		$scope.fileErrorMessage = "You must select the file with the same name as what the database has. Has: " + $scope.video.data.filename + ", you selected: " + file.filename;
+	// 		return;
+	// 	}else{
+	// 		console.log("going herre")
+	// 		$scope.videoCommand("addSource", file.realFileName);
+	// 		$scope.videoCommand("setup");
+	// 		$scope.videoCommand("load");
+	// 		$scope.videoCommand("addTimeUpdate", $scope.showSubtitleForTime);
+	// 		$scope.prepareVideo();
+	// 	}
+	// }
+
+	$scope.changePreviewToIndex = function(index){
+		console.log($scope.edit.popups[index])
+		bucketsFactory.getCaptionEditorBucket().then(function(bucket){
+			$scope.audioSource = "https://s3-us-west-2.amazonaws.com/" + bucket.name + "/" + $scope.edit.popups[index].filenameInBucket;
+			$scope.popupTextPreview = $scope.edit.popups[index].text || "ERROR, couldnt find text";
+			$scope.showingPreview = true;
+			console.log($scope.popupTextPreview)
+			$timeout(function(){
+				document.getElementById("previewAudioPlayer").load();
+				// document.getElementById("previewAudioPlayer").play();
+			}, 1000);
+		});
 	}
 
 	$scope.getCaptionTypeClass = function(){
@@ -193,6 +219,11 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 				$scope.buildCaptionListForRepeater();// look into this
 				$scope.validFileSelected = true;
 			});
+
+			popupsFactory.getAllPopups($scope.video.data.id, languageId).then(function(popups){
+				$scope.video.popups.defaultLanguage = popups;
+				$scope.buildPopupListForRepeater();
+			});
 			
 		}
 		// $scope.getCaptionLanguagesThisVideo();// we dont care about this because it does the references right now
@@ -230,68 +261,148 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		return newCaption;
 	}
 
+	$scope.getNewPopupObject = function(){
+		var newPopup = {
+			starttime:'',
+			endtime:'',
+			text:'',
+			refText:'',
+			language:$routeParams.lang,
+			showText:true,
+			showRefText:true,
+			startTimeError: $rootScope.flags.none,
+			endTimeError:$rootScope.flags.none,
+			textError:$rootScope.flags.none,
+			displayNameError:$rootScope.flags.none,
+			dontUseThisForTesting:false,
+			startTimeErrorMessage:'',
+			endTimeErrorMessage:'',
+			textErrorMessage:'',
+			displayNameErrorMessage:'',
+			startTime:0,
+			endTime:0,
+			languageId:$scope.getLanguageIdForLanguage($routeParams.lang),
+			displayName:'',
+			mediaId:parseInt($routeParams.videoId),
+			filename:''
+		};
+		return newPopup;
+	}
+
 	$scope.makeNewCaptionList = function(){
 		var newCaption = $scope.getNewCaptionObject();
 		newCaption.showRefText = false;
-		$scope.edit.activeEdit = new Array();
+		$scope.edit.activeEdit = new Array();// TODOHERE
 		$scope.edit.activeEdit.push(newCaption);
 	}
 
-	$scope.addRowAtEnd = function(){
-		var newCaption = $scope.getNewCaptionObject();
-		newCaption.showRefText = false;
-		if($scope.edit.activeEdit[$scope.edit.activeEdit.length-1]){
-			newCaption.starttime = $scope.edit.activeEdit[$scope.edit.activeEdit.length-1].endtime;
-			newCaption.sequence = parseInt($scope.edit.activeEdit[$scope.edit.activeEdit.length-1].sequence) + 1000;
-		}
-		$scope.edit.activeEdit.push(newCaption);
-		$scope.setDontChangeSettings();
-		$("#captionArea").scrollTop($("#captionArea")[0].scrollHeight - $("#captionArea").height());
-		$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
-			var id = 'starttime' + (parseInt($scope.edit.activeEdit.length) - 1);
-			document.getElementById(id).focus();
-		},0);
-	}
-
-	$scope.tabInCaptionField = function(index){
-		console.log("tabInCaptionField", $scope.edit.activeEdit.length, index)
-		if($scope.edit.activeEdit.length == index + 1)
-			// TODO run tests here
-			$scope.addRowAtEnd();
-		else{
-			var inputs = $(this).closest('form').find(':input');
-			console.log('inputs')
-			inputs.eq( inputs.index(this)+ 1 ).focus();
-		}
-	}
-
-	$scope.undoRemove = function(index){
-		$scope.edit.activeEdit[index].showText = true;
-		$scope.setDontChangeSettings();
-	}
-
-	$scope.addRowInMiddle = function(index){
-		var newCaption = $scope.getNewCaptionObject();
-		newCaption.endtime = $scope.edit.activeEdit[index].endtime;
-		$scope.edit.activeEdit[index].endtime = "";
-		newCaption.showRefText = false;
-		if(index == $scope.edit.activeEdit.length - 1){//if row getting added at the end
-			newCaption.sequence = ((parseInt($scope.edit.activeEdit[index].sequence)) + 1000);
+	$scope.addRowAtEnd = function(type){
+		if(type && type == 'popup'){
+			var newPopup = $scope.getNewPopupObject();
+			newPopup.showRefText = false;
+			if($scope.edit.popups[$scope.edit.popups.length-1])// there is a list already, so add and update start time to previous end time
+				newPopup.starttime = $scope.edit.popups[$scope.edit.popups.length-1].endtime;
+			
+			$scope.edit.popups.push(newPopup);
+			$scope.setDontChangeSettings();
+			// dont scroll, might not work
+			$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
+				var id = 'starttimeP' + (parseInt($scope.edit.popups.length) - 1);
+				console.log(id)
+				document.getElementById(id).focus();
+			},0);
+		}else{// must be a caption
+			var newCaption = $scope.getNewCaptionObject();
+			newCaption.showRefText = false;
+			if($scope.edit.activeEdit[$scope.edit.activeEdit.length-1]){
+				newCaption.starttime = $scope.edit.activeEdit[$scope.edit.activeEdit.length-1].endtime;
+				newCaption.sequence = parseInt($scope.edit.activeEdit[$scope.edit.activeEdit.length-1].sequence) + 1000;
+			}
 			$scope.edit.activeEdit.push(newCaption);
+			$scope.setDontChangeSettings();
 			$("#captionArea").scrollTop($("#captionArea")[0].scrollHeight - $("#captionArea").height());
-		}else{
-			newCaption.sequence = ((parseInt($scope.edit.activeEdit[index+1].sequence) - parseInt($scope.edit.activeEdit[index].sequence))/2) + parseInt($scope.edit.activeEdit[index].sequence);
-			$scope.edit.activeEdit.splice(index+1,0,newCaption);
+			$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
+				var id = 'starttime' + (parseInt($scope.edit.activeEdit.length) - 1);
+				document.getElementById(id).focus();
+			},0);
 		}
-		$scope.setDontChangeSettings();
-		$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
-			var id = 'starttime' + (parseInt(index) + 1);
-			document.getElementById(id).focus();
-		},0);
 	}
 
-	$scope.removeRow = function(index){
-		$scope.edit.activeEdit[index].showText = false;
+	$scope.tabInCaptionField = function(index, type){
+		if(type && type == 'popup'){
+			if($scope.edit.popups.length == index + 1)
+				$scope.addRowAtEnd(type);// Run tests here?
+			else{// move focus to next input in form
+				var inputs = $(this).closest('form').find(':input');
+				inputs.eq( inputs.index(this)+ 1 ).focus();
+			}
+		}else{
+			console.log("tabInCaptionField", $scope.edit.activeEdit.length, index)
+			if($scope.edit.activeEdit.length == index + 1)
+				// TODO run tests here?
+				$scope.addRowAtEnd();
+			else{
+				var inputs = $(this).closest('form').find(':input');
+				inputs.eq( inputs.index(this)+ 1 ).focus();
+			}
+		}
+	}
+
+	$scope.undoRemove = function(index, type){
+		if(type && type == 'popup')
+			$scope.edit.popups[index].showText = true;
+		else
+			$scope.edit.activeEdit[index].showText = true;
+		$scope.setDontChangeSettings();
+	}
+
+	$scope.addRowInMiddle = function(index, type){
+		if(type && type == 'popup'){
+			if(index == $scope.edit.popups.length-1){// just adding to the end
+				$scope.addRowAtEnd(type);
+				return;
+			}else{
+				var newPopup = $scope.getNewPopupObject();
+				newPopup.endtime = $scope.edit.popups[index].endtime;
+				$scope.edit.popups[index].endtime = "";
+				newPopup.showRefText = false;
+				$scope.edit.popups.splice(index+1, 0, newPopup);
+				$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
+					var id = 'starttimeP' + (parseInt(index) + 1);
+					document.getElementById(id).focus();
+				}, 0);
+			}
+		}else{
+			if(index == $scope.edit.activeEdit.length - 1){//if row getting added at the end
+				$scope.addRowAtEnd();
+				return;
+				// newCaption.sequence = ((parseInt($scope.edit.activeEdit[index].sequence)) + 1000);
+				// $scope.edit.activeEdit.push(newCaption);
+				// $("#captionArea").scrollTop($("#captionArea")[0].scrollHeight - $("#captionArea").height());
+			}else{
+				var newCaption = $scope.getNewCaptionObject();
+				newCaption.endtime = $scope.edit.activeEdit[index].endtime;
+				$scope.edit.activeEdit[index].endtime = "";
+				newCaption.showRefText = false;
+
+				newCaption.sequence = ((parseInt($scope.edit.activeEdit[index+1].sequence) - parseInt($scope.edit.activeEdit[index].sequence))/2) + parseInt($scope.edit.activeEdit[index].sequence);
+				$scope.edit.activeEdit.splice(index+1, 0, newCaption);
+				
+				
+				$timeout(function(){// allows focus to be put on the new line's start time. timeout makes it wait for the page to be rendered
+					var id = 'starttime' + (parseInt(index) + 1);
+					document.getElementById(id).focus();
+				}, 0);
+			}
+		}
+		$scope.setDontChangeSettings();
+	}
+
+	$scope.removeRow = function(index, type){
+		if(type && type == 'popup')
+			$scope.edit.popups[index].showText = false;
+		else
+			$scope.edit.activeEdit[index].showText = false;
 		$scope.setDontChangeSettings();
 	}
 
@@ -385,6 +496,39 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	
 	$scope.openChangeVideoModal = function(){
 		$location.path('/');
+	}
+
+	$scope.buildPopupListForRepeater = function(){
+		if($routeParams.how == 'new'){
+			alert("new is not implemented at this time for popups");
+		}else if($routeParams.how == "modify"){
+			if($routeParams.lang != 'none' && $routeParams.refLang == "none"){
+				$scope.edit.popups = angular.copy($scope.video.popups.defaultLanguage);// TODOHERE make sure scope.video.popups is getting set
+
+				// set up all the fields for the popups
+				for (var i = $scope.edit.popups.length - 1; i >= 0; i--) {
+					var popup = $scope.edit.popups[i];
+					popup.showText = true;
+					popup.showRefText = false;
+					popup.refText = "";
+					popup.startTimeError = $rootScope.flags.none;
+					popup.endTimeError = $rootScope.flags.none;
+					popup.textError = $rootScope.flags.none;
+					popup.dontUseThisForTesting = false;
+					popup.startTimeErrorMessage = "";
+					popup.endTimeErrorMessage = "";
+					popup.textErrorMessage = "";
+					popup.language = $routeParams.lang;
+					popup.starttime = $scope.convertLongToCaptionEditorTime(popup.startTime);
+					popup.endtime = $scope.convertLongToCaptionEditorTime(popup.endTime);
+					popup.text = popup.popupText;
+				};
+				console.log($scope.edit.popups)
+			}else
+				alert("this isnt implemented, buildPopupListForRepeater");
+			if($scope.edit.popups != undefined)
+				$scope.testPopupsForSubmission($scope.edit.popups);// test the new captions
+		}
 	}
 
 	$scope.buildCaptionListForRepeater = function(){
@@ -628,39 +772,69 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		
 	// }
 
-	$scope.checkIfInError = function(index, whichField) {// called from main.html
+	$scope.checkIfInError = function(index, whichField, type) {// called from main.html
+		var editType = 'activeEdit';
+		if(type && type == 'popup')
+			editType = 'popups';
+
 		if($scope.edit.showTestResults == 'yes'){
 			if(whichField == "starttime"){
-				if($scope.edit.activeEdit[index].startTimeError == $rootScope.flags.invalid){
-					console.log('mFieldError')
+				if($scope.edit[editType][index].startTimeError == $rootScope.flags.invalid)
 					return 'mFieldError';
-				}
-				else if($scope.edit.activeEdit[index].startTimeError == $rootScope.flags.none)
+				else if($scope.edit[editType][index].startTimeError == $rootScope.flags.none)
 					return '';
 				else
 					return 'mFieldValid';
 			}else if(whichField == "endtime"){
-				if($scope.edit.activeEdit[index].endTimeError == $rootScope.flags.invalid)
+				if($scope.edit[editType][index].endTimeError == $rootScope.flags.invalid)
 					return 'mFieldError';
-				else if($scope.edit.activeEdit[index].endTimeError == $rootScope.flags.none)
+				else if($scope.edit[editType][index].endTimeError == $rootScope.flags.none)
 					return '';
 				else
 					return 'mFieldValid';
-			}else if(whichField == "caption"){
-				if($scope.edit.activeEdit[index].textError == $rootScope.flags.invalid)
+			}else if(whichField == "caption" || whichField == 'popup'){
+				if($scope.edit[editType][index].textError == $rootScope.flags.invalid)
 					return 'mFieldError';
-				else if($scope.edit.activeEdit[index].textError == $rootScope.flags.none)
+				else if($scope.edit[editType][index].textError == $rootScope.flags.none)
 					return '';
 				else
 					return 'mFieldValid';
-			}
+			}else if(whichField == "displayName"){
+				if($scope.edit[editType][index].displayNameError == $rootScope.flags.invalid)
+					return 'mFieldError';
+				else if($scope.edit[editType][index].displayNameError == $rootScope.flags.none)
+					return '';
+				else
+					return 'mFieldValid';
+			}else
+				alert("the field name: " + whichField + " is not valid");
 		}
 		return '';
 	}
 
 	$scope.tests = {
+		displayNameValid: function(captionsToTest, index){
+			if(captionsToTest[index].displayName.length == 0){
+				$scope.showErrorOnHoverMessage = true;
+				captionsToTest[index].displayNameError = $rootScope.flags.invalid;
+				captionsToTest[index].displayNameErrorMessage = "The display name cannot be blank";
+			}else
+				captionsToTest[index].displayNameError = $rootScope.flags.valid;
+			return captionsToTest;
+		},
+		popupTextValid: function(captionsToTest, index){
+			console.log("three", captionsToTest[index])
+			if(captionsToTest[index].text.length == 0){
+				console.log("bad")
+				$scope.showErrorOnHoverMessage = true;
+				captionsToTest[index].textError = $rootScope.flags.invalid;
+				captionsToTest[index].textErrorMessage = "The popup text cannot be blank";
+			}else
+				captionsToTest[index].textError = $rootScope.flags.valid;
+			
+			return captionsToTest;
+		},
 		startTimeValid: function(captionsToTest, index){
-			console.log('in startTimeValid')
 			var startTimeValid = $scope.tests.isTimeValid(captionsToTest[index].starttime);
 			if(startTimeValid != "valid"){
 				$scope.showErrorOnHoverMessage = true;
@@ -678,13 +852,18 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 				captionsToTest[index].endTimeErrorMessage = endTimeValid;
 			}else
 				captionsToTest[index].endTimeError = $rootScope.flags.valid;
+
+			endTimeValid = $scope.tests.endTimeBeforeStartTime(captionsToTest[index]);
+			if(endTimeValid != "valid"){
+				$scope.showErrorOnHoverMessage = true;
+				captionsToTest[index].endTimeError = $rootScope.flags.invalid;
+				captionsToTest[index].endTimeErrorMessage += endTimeValid;
+			}
 			return captionsToTest;
 		},
 		captionValid: function(captionsToTest, index){
-			console.log(captionsToTest, index)
 			var captionValid = $scope.tests.isCaptionValid(captionsToTest[index].text || captionsToTest[index].caption)
 			if(captionValid != "valid"){
-				console.log("not valid")
 				$scope.showErrorOnHoverMessage = true;
 				captionsToTest[index].textError = $rootScope.flags.invalid;
 				captionsToTest[index].textErrorMessage = captionValid;
@@ -824,8 +1003,16 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 			else 
 				return message;
 		},
+		endTimeBeforeStartTime: function(caption){
+			var message  = "";
+			if(caption.endtime < caption.starttime)
+				message = "The end time is before the start time";
+			if(message == "")
+				return "valid";
+			else
+				return message;
+		},
 		isCaptionValid: function(caption){
-			console.log(caption)
 			var message = "";
 			if(caption.length == 0)
 				message = "The caption is blank. Remove it completelly or type something in it";
@@ -879,6 +1066,28 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}
 	}
 
+	$scope.testPopupsForSubmission = function(popups){
+		console.log("here")
+		for (var i = popups.length - 1; i >= 0; i--) {
+			var popup = popups[i];
+			if(popup.showText == false)
+				popup.dontUseThisForTesting = true;
+			else{
+				popups = $scope.tests.startTimeValid(popups, i);
+				popups = $scope.tests.endTimeValid(popups, i);
+				popups = $scope.tests.displayNameValid(popups, i);
+				popups = $scope.tests.popupTextValid(popups, i);
+			}
+		};
+		$scope.edit.showTestResults = 'yes';
+		var hasErrors = $scope.tests.hasErrors(popups);
+		if(hasErrors)
+			$scope.showErrorOnHoverMessage = true;
+		else
+			$scope.showErrorOnHoverMessage = false;
+		return hasErrors;
+	}
+
 	$scope.testCaptionsForSubmission = function(captionsToTest, dontTestCaptionField){
 		for (var i = captionsToTest.length - 1; i >= 0; i--) {
 			if(captionsToTest[i].showText == false)
@@ -912,8 +1121,8 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	// Modal functions
 	$scope.makeSureBackupIsValid = function(){
 		console.log("in backup is valid?")
-		var tempActiveEdit = angular.fromJson($scope.jsonStringOfBackupText);
-		if(!$scope.testCaptionsForSubmission(tempActiveEdit)){
+		var backup = angular.fromJson($scope.jsonStringOfBackupText);
+		if(!$scope.testCaptionsForSubmission(backup.captions) && !$scope.testPopupsForSubmission(backup.popups)){
 			console.log("valid")
 			$scope.jsonUploadErrorMessage = "This data is valid, please close this modal";
 			$scope.jsonUploadValid = true;
@@ -956,7 +1165,30 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 				backupCaptions.push(tempCaption);
 			}
 		};
-		$scope.jsonStringOfBackupText = angular.toJson(backupCaptions);
+
+		// TODO change this to backup the ones that are show text false too, update backup restore
+		var backupPopups = [];
+		for (var i = 0; i < $scope.edit.popups.length; i++) {
+			var popup = $scope.edit.popups[i];
+			if(popup.showText){
+				var tempPopup = {
+					startTime: $scope.convertCaptionEditorTimeToLong(popup.starttime),
+					endTime: $scope.convertCaptionEditorTimeToLong(popup.endtime),
+					displayName: popup.displayName,
+					popupText: popup.text,
+					mediaId: popup.mediaId,
+					languageId: languageId,
+					filename: popup.filename
+				};
+				backupPopups.push(tempPopup);
+			}
+		};
+		var backupData = {
+			languageId:languageId,
+			captions:backupCaptions,
+			popups:backupPopups
+		};
+		$scope.jsonStringOfBackupText = angular.toJson(backupData);
 		$scope.modalFlags.showJsonCopyModal = true;
 		$scope.modalMessages.jsonTitle = "Download Captions Backup Data";
 		$scope.modalMessages.jsonMessage = "Click in the text box, select all the text by pressing Ctrl A, then copy all the text to a text document where YOU SAVE IT to a spot of your choosing.";
@@ -986,15 +1218,20 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 
 	$scope.submitCaptions = function(){
 		$scope.saveMessage = "";
-		if($scope.edit.activeEdit != undefined){
-			if($scope.testCaptionsForSubmission($scope.edit.activeEdit)){
+		if($scope.edit.activeEdit != undefined && $scope.edit.popups != undefined){
+			if($scope.testCaptionsForSubmission($scope.edit.activeEdit) || $scope.testPopupsForSubmission($scope.edit.popups)){
 				$scope.bigError = "Big error";
 				$scope.showErrorOnHoverMessage = true;
 				console.log("big error")
 				$scope.saveMessage = "Fix errors first";
+				$timeout(function(){
+					$scope.saveMessage = "";
+				}, 5000);
 			}else{
 				$scope.saveMessage = "Saving";
 				console.log("generating final")
+
+				// build captions
 				$scope.finalCaptions = new Array();
 				$scope.showErrorOnHoverMessage = false;
 
@@ -1019,23 +1256,110 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 						// tempCaption.language = $scope.edit.activeEdit[i].language;
 						// tempCaption.sequence = i * 1000 + 100000;// Rebuild sequence
 						$scope.finalCaptions.push(tempCaption);
-					}
+					}else if(caption.id != undefined && caption.id != 0)
+						captionsFactory.deleteCaption(caption.id);
 				};
 				//submit function
-				console.log("to submit function", $scope.finalCaptions);
+				console.log("final captions: ", $scope.finalCaptions);
+
+				// build popups
+				$scope.finalPopups = [];
+				for (var i = 0; i < $scope.edit.popups.length; i++) {
+					var popup = $scope.edit.popups[i];
+					if(popup.showText){
+						var tempPopup = {
+							id:popup.id || 0,
+							startTime: $scope.convertCaptionEditorTimeToLong(popup.starttime),
+							endTime: $scope.convertCaptionEditorTimeToLong(popup.endtime),
+							displayName: popup.displayName,
+							popupText: popup.text,
+							mediaId: popup.mediaId,
+							languageId: languageId,
+							filename: popup.filename
+						};
+						if(popup.file)
+							tempPopup.filename = popup.file.filename;
+						$scope.finalPopups.push(tempPopup);
+
+					}else if(popup.id != undefined && popup.id != 0)
+						popupsFactory.deletePopup(popup.id);
+				};
+
+				var captionsDefer = $q.defer();
+				var popupsDefer = $q.defer();
+				var uploadFilesDefer = $q.defer();
+				captionsDefer.promise.then(function(){
+					popupsDefer.promise.then(function(){
+						$scope.saveMessage = "Uploading Files";
+						uploadFilesDefer.promise.then(function(){
+							if($scope.saveMessage != "Uploading Files")
+								return;
+
+							$scope.saveMessage = "Success";
+							$timeout(function() {
+								if($scope.saveMessage == "Success")
+									$scope.saveMessage = "";
+							}, 5000);
+						});
+					});
+				})
+				$scope.filesNeedToUpload = 0;
+				$scope.filesUploaded = 0;
 
 				captionsFactory.putCaptions($scope.finalCaptions).then(function(data){
+					$scope.video.captions.defaultLanguage = data;
+					$scope.buildCaptionListForRepeater();
+					captionsDefer.resolve();
 					if(data == null)
 						$scope.saveMessage = "Error, please back up";
-					else{
-						$scope.saveMessage = "Success";
-						$timeout(function() {$scope.saveMessage = "";}, 3000);
-					}
-					console.log("submitted, here", data);
 				});
-				// $scope.modalFlags.submitModalStatus ='askPassword';
+
+				popupsFactory.putPopups($scope.finalPopups).then(function(newPopups){
+					popupsDefer.resolve();
+					for (var i = $scope.edit.popups.length - 1; i >= 0; i--) {
+						var popup = $scope.edit.popups[i];
+
+						// upload ones that have a file, this is set by the directive so they are new
+						// search for this popup in the ones that just came back to get the new id
+
+						for (var j = newPopups.length - 1; j >= 0; j--) {
+							var newPopup = newPopups[j];
+							if(newPopup.mediaId == popup.mediaId &&
+								newPopup.startTime == $scope.convertCaptionEditorTimeToLong(popup.starttime) &&
+								newPopup.endTime == $scope.convertCaptionEditorTimeToLong(popup.endtime) &&
+								newPopup.displayName == popup.displayName &&
+								newPopup.popupText == popup.text){
+
+								popup.id = newPopup.id;
+
+								if(popup.file){
+									$scope.filesNeedToUpload++;
+									$scope.uploadFileForPopup(popup, newPopup.id, uploadFilesDefer);
+								}
+							}
+						};
+					};
+					if($scope.filesNeedToUpload == 0)// in case there are no files to upload
+						uploadFilesDefer.resolve();
+				});
 			}
 		}	
+	}
+
+	$scope.uploadFileForPopup = function(popup, id, defer){
+		popupsFactory.savePopup(popup.file.base64Data, id, popup.file.contentType).then(function(data){
+
+			popup.filenameInBucket = data;
+			$scope.filesUploaded++;
+			if($scope.filesUploaded == $scope.filesNeedToUpload)
+				defer.resolve();
+			
+
+		}, function(data){
+			alert("error uploading file connected to popup: " + popup.displayName + ", the rest of the popup information was saved except for files. Please reload the page and try to upload the audio files again");
+			$scope.saveMessage = "Error";
+			console.log("error", id, data);
+		});
 	}
 
 	$scope.sendCaptions = function(password){
@@ -1072,97 +1396,97 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		$scope.videoCommand("goToTime", wholeTime);
 	}
 
-	$scope.convertQuickTime = function(whichField, index){// changes time typed in 123 to 1.23 OR 14256 to 1:42:56
+	$scope.convertQuickTime = function(whichField, index, type){// changes time typed in 123 to 1.23 OR 14256 to 1:42:56
+		var editType = 'activeEdit';
+		if(type && type == 'popup')
+			editType = 'popups';
+
 		// console.log(whichField, index, $scope.edit.activeEdit[index].starttime.length)
 		var hours = 0, minutes = 0, seconds = 0, frames = 0;
 		if(whichField == 'start'){
-			if($scope.edit.activeEdit[index].starttime == undefined || $scope.edit.activeEdit[index].starttime == ''){
+			if($scope.edit[editType][index].starttime == undefined || $scope.edit[editType][index].starttime == ''){
 				return;//invalid field
-			}else if(!$scope.tests.areNumbers($scope.edit.activeEdit[index].starttime)){// there are already special characters in the field. use the smarter time parser
-				console.log("in specialS")
-				var returnedObject = $scope.addLeadingZerosToWholeTime($scope.edit.activeEdit[index].starttime);
+			}else if(!$scope.tests.areNumbers($scope.edit[editType][index].starttime)){// there are already special characters in the field. use the smarter time parser
+				var returnedObject = $scope.addLeadingZerosToWholeTime($scope.edit[editType][index].starttime);
 				if(returnedObject.hasError){
-					console.log('in has error', index)
-					$scope.edit.activeEdit[index].startTimeError = $rootScope.flags.invalid;
-					$scope.edit.activeEdit[index].startTimeErrorMessage = returnedObject.errorMessage;
+					$scope.edit[editType][index].startTimeError = $rootScope.flags.invalid;
+					$scope.edit[editType][index].startTimeErrorMessage = returnedObject.errorMessage;
 				}else{
-					$scope.edit.activeEdit[index].starttime = returnedObject.wholeTime;
-					$scope.edit.activeEdit[index].startTimeError = $rootScope.flags.valid;
-					$scope.edit.activeEdit[index].startTimeErrorMessage = '';
+					$scope.edit[editType][index].starttime = returnedObject.wholeTime;
+					$scope.edit[editType][index].startTimeError = $rootScope.flags.valid;
+					$scope.edit[editType][index].startTimeErrorMessage = '';
 				}
-				$scope.tests.startTimeValid($scope.edit.activeEdit, index);
+				$scope.tests.startTimeValid($scope.edit[editType], index);
 				return;
-			}else if($scope.edit.activeEdit[index].starttime.length > 8){
+			}else if($scope.edit[editType][index].starttime.length > 8){
 				return;// do nothing, they typed too many numbers
-			}else if($scope.edit.activeEdit[index].starttime.length > 6){// take the time assuming that fields are complete, starting with frames and then moving left
-				frames = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 4, $scope.edit.activeEdit[index].starttime.length - 2);
-				minutes = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 6, $scope.edit.activeEdit[index].starttime.length - 4);
-				hours = 	$scope.edit.activeEdit[index].starttime.slice(0, $scope.edit.activeEdit[index].starttime.length - 6);
+			}else if($scope.edit[editType][index].starttime.length > 6){// take the time assuming that fields are complete, starting with frames and then moving left
+				frames = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 2);
+				seconds = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 4, $scope.edit[editType][index].starttime.length - 2);
+				minutes = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 6, $scope.edit[editType][index].starttime.length - 4);
+				hours = 	$scope.edit[editType][index].starttime.slice(0, $scope.edit[editType][index].starttime.length - 6);
 				console.log(frames,seconds,minutes,hours)
-			}else if($scope.edit.activeEdit[index].starttime.length > 4){
-				frames = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 4, $scope.edit.activeEdit[index].starttime.length - 2);
-				minutes = 	$scope.edit.activeEdit[index].starttime.slice(0, $scope.edit.activeEdit[index].starttime.length - 4);
+			}else if($scope.edit[editType][index].starttime.length > 4){
+				frames = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 2);
+				seconds = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 4, $scope.edit[editType][index].starttime.length - 2);
+				minutes = 	$scope.edit[editType][index].starttime.slice(0, $scope.edit[editType][index].starttime.length - 4);
 				console.log(frames,seconds,minutes,hours)
-			}else if($scope.edit.activeEdit[index].starttime.length > 2){
-				frames = 	$scope.edit.activeEdit[index].starttime.slice($scope.edit.activeEdit[index].starttime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].starttime.slice(0, $scope.edit.activeEdit[index].starttime.length - 2);
+			}else if($scope.edit[editType][index].starttime.length > 2){
+				frames = 	$scope.edit[editType][index].starttime.slice($scope.edit[editType][index].starttime.length - 2);
+				seconds = 	$scope.edit[editType][index].starttime.slice(0, $scope.edit[editType][index].starttime.length - 2);
 				console.log(frames,seconds,minutes,hours)
-			}else if($scope.edit.activeEdit[index].starttime.length > 0)
-				frames = 	$scope.edit.activeEdit[index].starttime;
+			}else if($scope.edit[editType][index].starttime.length > 0)
+				frames = 	$scope.edit[editType][index].starttime;
 			console.log(frames,seconds,minutes,hours)
-			if($scope.edit.activeEdit[index].starttime.length != 0){
-				$scope.edit.activeEdit[index].starttime = $scope.addLeadingZeros(hours, 2) + ':' + $scope.addLeadingZeros(minutes, 2) + ':' + $scope.addLeadingZeros(seconds, 2) + '.' + $scope.addLeadingZeros(frames, 2);
-				$scope.tests.startTimeValid($scope.edit.activeEdit, index);
+			if($scope.edit[editType][index].starttime.length != 0){
+				$scope.edit[editType][index].starttime = $scope.addLeadingZeros(hours, 2) + ':' + $scope.addLeadingZeros(minutes, 2) + ':' + $scope.addLeadingZeros(seconds, 2) + '.' + $scope.addLeadingZeros(frames, 2);
+				$scope.tests.startTimeValid($scope.edit[editType], index);
 			}
 		}else if(whichField == 'end'){
-			console.log('asdfasdf',$scope.tests.areNumbers($scope.edit.activeEdit[index].endtime))
-			if($scope.edit.activeEdit[index].endtime == undefined || $scope.edit.activeEdit[index].endtime == ''){
+			if($scope.edit[editType][index].endtime == undefined || $scope.edit[editType][index].endtime == ''){
 				//invalid field
-				console.log("in end")
+				console.log("invalid field, should never be here");
 				return;
-			}else if(!$scope.tests.areNumbers($scope.edit.activeEdit[index].endtime)){// there are already special characters in the field. use the smarter time parser
-				console.log("in end")
-				var returnedObject = $scope.addLeadingZerosToWholeTime($scope.edit.activeEdit[index].endtime);
+			}else if(!$scope.tests.areNumbers($scope.edit[editType][index].endtime)){// there are already special characters in the field. use the smarter time parser
+				var returnedObject = $scope.addLeadingZerosToWholeTime($scope.edit[editType][index].endtime);
 				if(returnedObject.hasError){
-					$scope.edit.activeEdit[index].endTimeError = $rootScope.flags.invalid;
-					$scope.edit.activeEdit[index].endTimeErrorMessage = returnedObject.errorMessage;
+					$scope.edit[editType][index].endTimeError = $rootScope.flags.invalid;
+					$scope.edit[editType][index].endTimeErrorMessage = returnedObject.errorMessage;
 				}else{
-					$scope.edit.activeEdit[index].endtime = returnedObject.wholeTime;
-					$scope.edit.activeEdit[index].endTimeError = $rootScope.flags.valid;
-					$scope.edit.activeEdit[index].endTimeErrorMessage = '';
+					$scope.edit[editType][index].endtime = returnedObject.wholeTime;
+					$scope.edit[editType][index].endTimeError = $rootScope.flags.valid;
+					$scope.edit[editType][index].endTimeErrorMessage = '';
 				}
-				$scope.tests.endTimeValid($scope.edit.activeEdit, index);
-				$scope.tests.oneRowTimesOverlapping($scope.edit.activeEdit, index);
+				$scope.tests.endTimeValid($scope.edit[editType], index);
+				$scope.tests.oneRowTimesOverlapping($scope.edit[editType], index);
 				return;
-			}else if($scope.edit.activeEdit[index].endtime.length > 8){
+			}else if($scope.edit[editType][index].endtime.length > 8){
 				// do nothing, they typed too many numbers
-				console.log("in end")
+				console.log("too many numbers");
 				return;
-			}else if($scope.edit.activeEdit[index].endtime.length > 6){// take the time assuming that fields are complete, starting with frames and then moving left
-				frames = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 4, $scope.edit.activeEdit[index].endtime.length - 2);
-				minutes = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 6, $scope.edit.activeEdit[index].endtime.length - 4);
-				console.log("in end")
-				hours = 	$scope.edit.activeEdit[index].endtime.slice(0, $scope.edit.activeEdit[index].endtime.length - 6);
-			}else if($scope.edit.activeEdit[index].endtime.length > 4){
-				frames = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 4, $scope.edit.activeEdit[index].endtime.length - 2);
-				console.log("in end")
-				minutes = 	$scope.edit.activeEdit[index].endtime.slice(0, $scope.edit.activeEdit[index].endtime.length - 4);
-			}else if($scope.edit.activeEdit[index].endtime.length > 2){
-				frames = 	$scope.edit.activeEdit[index].endtime.slice($scope.edit.activeEdit[index].endtime.length - 2);
-				seconds = 	$scope.edit.activeEdit[index].endtime.slice(0, $scope.edit.activeEdit[index].endtime.length - 2);
+			}else if($scope.edit[editType][index].endtime.length > 6){// take the time assuming that fields are complete, starting with frames and then moving left
+				frames = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 2);
+				seconds = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 4, $scope.edit[editType][index].endtime.length - 2);
+				minutes = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 6, $scope.edit[editType][index].endtime.length - 4);
+				hours = 	$scope.edit[editType][index].endtime.slice(0, $scope.edit[editType][index].endtime.length - 6);
+			}else if($scope.edit[editType][index].endtime.length > 4){
+				frames = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 2);
+				seconds = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 4, $scope.edit[editType][index].endtime.length - 2);
+				minutes = 	$scope.edit[editType][index].endtime.slice(0, $scope.edit[editType][index].endtime.length - 4);
+			}else if($scope.edit[editType][index].endtime.length > 2){
+				frames = 	$scope.edit[editType][index].endtime.slice($scope.edit[editType][index].endtime.length - 2);
+				seconds = 	$scope.edit[editType][index].endtime.slice(0, $scope.edit[editType][index].endtime.length - 2);
 				console.log(frames, seconds)
-			}else if($scope.edit.activeEdit[index].endtime.length > 0)
-				frames = 	$scope.edit.activeEdit[index].endtime;
-			else
-				console.log('fail')
-			if($scope.edit.activeEdit[index].endtime.length != 0){
-				$scope.edit.activeEdit[index].endtime = $scope.addLeadingZeros(hours, 2) + ':' + $scope.addLeadingZeros(minutes, 2) + ':' + $scope.addLeadingZeros(seconds, 2) + '.' + $scope.addLeadingZeros(frames, 2);
-				$scope.tests.endTimeValid($scope.edit.activeEdit, index);
-				$scope.tests.oneRowTimesOverlapping($scope.edit.activeEdit, index);
+			}else if($scope.edit[editType][index].endtime.length > 0)
+				frames = 	$scope.edit[editType][index].endtime;
+			else{
+				console.log('fail, should never get here');
+				return;
+			}
+			if($scope.edit[editType][index].endtime.length != 0){
+				$scope.edit[editType][index].endtime = $scope.addLeadingZeros(hours, 2) + ':' + $scope.addLeadingZeros(minutes, 2) + ':' + $scope.addLeadingZeros(seconds, 2) + '.' + $scope.addLeadingZeros(frames, 2);
+				$scope.tests.endTimeValid($scope.edit[editType], index);
+				$scope.tests.oneRowTimesOverlapping($scope.edit[editType], index);
 			}
 		}
 	}
@@ -1247,50 +1571,58 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	}
 
 	// Adds one second to the time per up arrow press
-	$scope.upArrow = function(index, startOrEnd){// true start, false end
+	$scope.upArrow = function(index, startOrEnd, type){// true start, false end
+		var editType = 'activeEdit';
+		if(type && type == 'popup')
+			editType = 'popups';
+
 		if(startOrEnd == undefined)
 			return;
 		if(startOrEnd){
-			if($scope.edit.activeEdit[index].starttime == ''){// insead of incrementing an empty field, take the time from the previous row's end
-				if($scope.edit.activeEdit[index-1] && $scope.edit.activeEdit[index-1].endtime != undefined && $scope.edit.activeEdit[index - 1].endtime != '')
-					$scope.edit.activeEdit[index].starttime = $scope.correctTheTimeGreaterThan($scope.edit.activeEdit[index - 1].endtime, 0, "seconds");
+			if($scope.edit[editType][index].starttime == ''){// insead of incrementing an empty field, take the time from the previous row's end
+				if($scope.edit[editType][index-1] && $scope.edit[editType][index-1].endtime != undefined && $scope.edit[editType][index - 1].endtime != '')
+					$scope.edit[editType][index].starttime = $scope.correctTheTimeGreaterThan($scope.edit[editType][index - 1].endtime, 0, "seconds");
 				else
-					$scope.edit.activeEdit[index].starttime = $scope.convertLongToCaptionEditorTime(0);
+					$scope.edit[editType][index].starttime = $scope.convertLongToCaptionEditorTime(0);
 			}else
-				$scope.edit.activeEdit[index].starttime = $scope.correctTheTimeGreaterThan($scope.edit.activeEdit[index].starttime, 1, "seconds");
-			$scope.videoToThisTime($scope.edit.activeEdit[index].starttime);
+				$scope.edit[editType][index].starttime = $scope.correctTheTimeGreaterThan($scope.edit[editType][index].starttime, 1, "seconds");
+			$scope.videoToThisTime($scope.edit[editType][index].starttime);
 		}else{
-			if($scope.edit.activeEdit[index].endtime == ''){// instead of incrementing an empty field, take the start time of this row
-				if($scope.edit.activeEdit[index] && $scope.edit.activeEdit[index].starttime != undefined && $scope.edit.activeEdit[index].starttime != '')
-					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeGreaterThan($scope.edit.activeEdit[index].starttime, 0, "seconds");
+			if($scope.edit[editType][index].endtime == ''){// instead of incrementing an empty field, take the start time of this row
+				if($scope.edit[editType][index] && $scope.edit[editType][index].starttime != undefined && $scope.edit[editType][index].starttime != '')
+					$scope.edit[editType][index].endtime = $scope.correctTheTimeGreaterThan($scope.edit[editType][index].starttime, 0, "seconds");
 				else
-					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeGreaterThan($scope.convertLongToCaptionEditorTime(0), 1, "seconds");
+					$scope.edit[editType][index].endtime = $scope.correctTheTimeGreaterThan($scope.convertLongToCaptionEditorTime(0), 1, "seconds");
 			}else
-				$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeGreaterThan($scope.edit.activeEdit[index].endtime, 1, "seconds");
-			$scope.videoToThisTime($scope.edit.activeEdit[index].endtime);
+				$scope.edit[editType][index].endtime = $scope.correctTheTimeGreaterThan($scope.edit[editType][index].endtime, 1, "seconds");
+			$scope.videoToThisTime($scope.edit[editType][index].endtime);
 		}
 		
 	}
 
 	// Minuses one second from the time per down arrow press
-	$scope.downArrow = function(index, startOrEnd){// true start, false end
+	$scope.downArrow = function(index, startOrEnd, type){// true start, false end
+		var editType = 'activeEdit';
+		if(type && type == 'popup')
+			editType = 'popups';
+
 		if(startOrEnd == undefined)
 			return;
 		if(startOrEnd){
-			if($scope.edit.activeEdit[index].starttime != undefined && $scope.edit.activeEdit[index].starttime != ''){
-				$scope.edit.activeEdit[index].starttime = $scope.correctTheTimeLessThan($scope.edit.activeEdit[index].starttime, 1, "seconds");
-				$scope.videoToThisTime($scope.edit.activeEdit[index].starttime);
+			if($scope.edit[editType][index].starttime != undefined && $scope.edit[editType][index].starttime != ''){
+				$scope.edit[editType][index].starttime = $scope.correctTheTimeLessThan($scope.edit[editType][index].starttime, 1, "seconds");
+				$scope.videoToThisTime($scope.edit[editType][index].starttime);
 			}else
-				$scope.edit.activeEdit[index].starttime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
+				$scope.edit[editType][index].starttime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
 		}else{
-			if($scope.edit.activeEdit[index].endtime != undefined && $scope.edit.activeEdit[index].endtime != '')
-				$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeLessThan($scope.edit.activeEdit[index].endtime, 1, "seconds");
+			if($scope.edit[editType][index].endtime != undefined && $scope.edit[editType][index].endtime != '')
+				$scope.edit[editType][index].endtime = $scope.correctTheTimeLessThan($scope.edit[editType][index].endtime, 1, "seconds");
 			else{
-				if($scope.edit.activeEdit[index].starttime != undefined && $scope.edit.activeEdit[index].starttime != ''){
-					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeLessThan($scope.edit.activeEdit[index].starttime, 0, "seconds");
-					$scope.videoToThisTime($scope.edit.activeEdit[index].endtime);
+				if($scope.edit[editType][index].starttime != undefined && $scope.edit[editType][index].starttime != ''){
+					$scope.edit[editType][index].endtime = $scope.correctTheTimeLessThan($scope.edit[editType][index].starttime, 0, "seconds");
+					$scope.videoToThisTime($scope.edit[editType][index].endtime);
 				}else
-					$scope.edit.activeEdit[index].endtime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
+					$scope.edit[editType][index].endtime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
 			}
 		}
 	}
@@ -1401,14 +1733,27 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		return String($scope.addLeadingZeros(hours, 2) + ":" + $scope.addLeadingZeros(minutes, 2) + ":" + $scope.addLeadingZeros(seconds, 2) + "." + $scope.addLeadingZeros(frames, 2));
 	}
 
+//https://s3-us-west-2.amazonaws.com/captioneditor-uuid-f6f6be1d-3c04-4c1c-82e1-ec58fce68747/ph7j39l09amcebpjsqbc61v91o
 	mediaFactory.getMediaById($routeParams.videoId).then(function(data){
+		var waitDefer1 = $q.defer();
+		var waitDefer2 = $q.defer();
 		$scope.video.data = data;
+		console.log(data)
 		for (var i = $scope.editModes.length - 1; i >= 0; i--) {//setup $scope.edit.mode model from the route params, allows dropdown to show correct mode
 			if($scope.editModes[i].type == $routeParams.how){
 				$scope.edit.mode = $scope.editModes[i];
 				break;
 			}
 		};
+		bucketsFactory.getCaptionEditorBucket().then(function(bucket){
+			$scope.captionEditorBucket = bucket;
+			var videoPath = "https://s3-us-west-2.amazonaws.com/" + bucket.name + "/" + $scope.video.data.filenameInBucket;
+			$scope.videoCommand("addSource", videoPath);
+			$scope.videoCommand("setup");
+			$scope.videoCommand("load");
+			$scope.videoCommand("addTimeUpdate", $scope.showSubtitleForTime);
+			waitDefer1.resolve();
+		});
 		languagesFactory.getLanguages().then(function(data){
 			$scope.video.captions.languages = data;
 			$scope.allLanguages = data;
@@ -1419,6 +1764,12 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 					break;
 				}
 			};
+			waitDefer2.resolve();
+		});
+		waitDefer1.promise.then(function(){
+			waitDefer2.promise.then(function(){
+				$scope.prepareVideo();
+			});
 		});
 	});
 }

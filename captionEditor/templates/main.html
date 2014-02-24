@@ -1,11 +1,9 @@
+<div ng-show="loading">Loading</div>
 <div ng-hide="loading">
 	<div class="mLeft" id="angular-area">
 		<div class="mLeftTitle">Options</div>
 		<div class="mChangeVideoButton" ng-click="openChangeVideoModal()">Change Video</div>
 		<img src="assets/options_line.png">
-		<div style="float:left">Choose video: {{video.data.filename}}</div>
-		<input type="file" ng-model="selectedFile" accept="video/mp4" app-filereader ng-change="selectedVideoFile(selectedFile)" />
-		<div ng-show="fileErrorMessage.length" style="color:red;">{{fileErrorMessage}}</div>
 		<!-- <div class="mLeftSubTitle">Select editing mode:</div> -->
 		<!-- <select ng-model="edit.mode" ng-options="mode as mode.title for mode in editModes" ng-change="changedEditMode(edit.mode.type)"></select> -->
 		<div ng-switch on="routeValues.how">
@@ -28,15 +26,81 @@
 				<div class="mErrorOnHoverMessage" ng-show="showErrorOnHoverMessage">Hover over the red below to see the error message.</div>
 			</div>
 		</div>
+		<div style="float:left">Editing video: {{video.data.filename}}</div>
+		<!-- <input type="file" ng-model="selectedFile" accept="video/mp4" app-filereader ng-change="selectedVideoFile(selectedFile)" /> -->
+		<div ng-show="fileErrorMessage.length" style="color:red;">{{fileErrorMessage}}</div>
 	</div>
 	<!-- <video videojs id="mainVideo" class="video-js vjs-default-skin" width="575" height="351" /*data-setup='{ "controls":true, "autoplay":true, "preload":"none", "playerFallbackOrder": ["html5", "flash", "links"] }'*/>
 		<source id="videoSource" type="video/mp4">
 	</video> -->
 	<video id="mainVideo2" class="mainVideo2Style" controls></video>
 	<div class="mAboveBottom" ng-class="getCaptionTypeClass()" ng-show="validFileSelected">{{captionShowing.text}}</div>
-	<div class="mBottom" ng-show="validFileSelected">
+	<div style="clear:left"></div>
+	<button class="toggleViewButton" ng-show="validFileSelected" ng-click="showPopupEditor = !showPopupEditor; showCaptionEditor = !showCaptionEditor">Toggle Captions/Popups</button>
+	<div class="mBottom" ng-show="validFileSelected && showPopupEditor">
+	<!-- this next div is the same in them both -->
 		<div class="mBottom1">
-			<div class="mClickToSeek">Click to Seek:</div>
+			<div class="mClickToSeek">Popups: Click to Seek:</div>
+			<button class="mClickRadio" ng-click="edit.clickToSeek = 'on'" ng-hide="edit.clickToSeek == 'on'">Off</button>
+			<button class="mClickRadio" ng-click="edit.clickToSeek = 'off'" ng-show="edit.clickToSeek == 'on'">On</button>
+			
+			<div class="mClickToSeek">&nbsp&nbsp&nbsp&nbspShow Test Results:</div>
+			<button class="mClickRadio" ng-click="edit.showTestResults = 'yes'" ng-hide="edit.showTestResults == 'yes'">Off</button>
+			<button class="mClickRadio" ng-click="edit.showTestResults = 'no'" ng-show="edit.showTestResults == 'yes'">On</button>
+
+			<div style="float:right">{{saveMessage}}</div>
+			<button ng-click="submitCaptions()" name="submitCaptionsButton" class="mSubmitCaptions" title="Submit the current popups to the server">Submit Everything</button>
+		</div>
+		<div class="mBottom1">
+			<div class="mColumnTitle1">Start Time</div>
+			<div class="mColumnTitle2">End Time</div>
+			<div class="mColumnTitle4">{{edit.language.fullLang}}</div>
+		</div>
+		<div class="mBottomCaptionArea" id="captionArea">
+			<form>
+			<div ng-repeat="popup in edit.popups">
+				<div class="mCaptionRow">
+					<input type="text" id="starttimeP{{$index}}" name="starttimeP{{$index}}" ng-model="popup.starttime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-focus="videoToThisTime(popup.starttime)" on-blur="convertQuickTime('start', $index, 'popup')" on-up-arrow="upArrow($index, true, 'popup')" on-down-arrow="downArrow($index, true, 'popup')" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index,'starttime', 'popup')" title="{{popup.startTimeErrorMessage}}" ng-show="popup.showText">
+					<input type="text" id="endtimeP{{$index}}" name="endtimeP{{$index}}" ng-model="popup.endtime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-blur="convertQuickTime('end', $index, 'popup')" on-up-arrow="upArrow($index, false, 'popup')" on-down-arrow="downArrow($index, false, 'popup')" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'endtime', 'popup')" title="{{popup.endTimeErrorMessage}}" ng-show="popup.showText">
+
+					<input type="text" name="popup{{$index}}" ng-model="popup.displayName" placeholder="Display Name" class="mCaptionWithReferenceLong" maxlength="30" ng-show="popup.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'displayName', 'popup')" title="{{popup.textErrorMessage}}" style="width:100px">
+
+					<input type="text" name="popup{{$index}}" ng-model="popup.text" placeholder="Popup Text" class="mCaptionWithReferenceLong" maxlength="4000" ng-show="popup.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'popup', 'popup')" title="{{popup.textErrorMessage}}" on-tab="tabInCaptionField($index, 'popup')">
+					
+					<!-- from here down should be good -->
+					<img ng-click="addRowInMiddle($index, 'popup')" class="mAddButton" src="assets/btnAdd.png" onmousedown="this.src='assets/btnAddActive.png'" onmouseup="this.src='assets/btnAdd.png'" onmouseout="this.src='assets/btnAdd.png'" ng-show="showAddRemove(popup.showText)" title="Add new row after this row">
+					<img ng-click="removeRow($index, 'popup')" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(popup.showText)" title="Remove this row">
+					<img ng-click="undoRemove($index, 'popup')" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!popup.showText)" title="Undo row removal">
+					<button ng-click="changePreviewToIndex($index)" ng-show="popup.showText" style="float:left" ng-show="showAddRemove(popup.showText)" title="Changes the preview to the left to this row, audio will only work that has been uploaded to the server" ng-show="popup.showText">Preview</button>
+					<input type="file" style="float:left" ng-show="popup.showText" ng-model="popup.file" accept="audio/mpeg" app-filereader ng-change="selectedFile(newMedia)"/>
+					<div style="float:left" ng-show="popup.showText">Filename: {{popup.filename || popup.file.filename || 'None'}}</div>
+				</div>
+			</div>
+			</form>
+			<button style="width:100%" ng-click="addRowAtEnd('popup')" ng-hide="routeValues.lang == 'none'">New Row</button>
+		</div>
+	</div>
+	<div ng-show="showingPreview" class="popupPreviewModal">
+		<button ng-click="showingPreview = false" style="float:right">Close</button>
+		<div style="min-height:50px; width:400px; margin:20px;" ng-bind-html="popupTextPreview"></div>
+		<audio id="previewAudioPlayer" controls>
+			<source type="audio/mpeg" ng-src="{{audioSource}}">
+		</audio>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+	<div class="mBottom" ng-show="validFileSelected && showCaptionEditor">
+		<div class="mBottom1">
+			<div class="mClickToSeek">Captions: Click to Seek:</div>
 			<div class="mClickRadio"><input type="radio" name="clickToSeekOn" ng-model="edit.clickToSeek" value="on" class="mRadio" checked="checked">On</div>
 			<div class="mClickRadio"><input type="radio" name="clickToSeekOff" ng-model="edit.clickToSeek" value="off" class="mRadio">Off</div>
 			<div class="mClickToSeek">&nbsp&nbsp&nbsp&nbspShow Test Results:</div>
@@ -44,7 +108,7 @@
 			<div class="mClickRadio"><input type="radio" name="showTestResultsOff" ng-model="edit.showTestResults" value="no" class="mRadio">No</div>
 			<!-- <button ng-click="endTimesToStartTimes()" name="endTimesToStartTimesButton" class="mEndToStartTimes" title="Extend all end times to be the same as the start times of the next caption">End Times to Start Times</button> -->
 			<div style="float:right;">{{saveMessage}}</div>
-			<button ng-click="submitCaptions()" name="submitCaptionsButton" class="mSubmitCaptions" title="Submit the current captions to the server">Submit Captions</button>
+			<button ng-click="submitCaptions()" name="submitCaptionsButton" class="mSubmitCaptions" title="Submit the current captions to the server">Submit Everything</button>
 		</div>
 
 		<div ng-switch on="routeValues.refLang">
@@ -100,7 +164,7 @@
 							<img ng-click="undoRemove($index)" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!caption.showText)" title="Undo row removal">
 						</div>
 					</div>
-				</form>
+					</form>
 					<button style="width:100%" ng-click="addRowAtEnd()" ng-hide="routeValues.lang == 'none'">New Row</button>
 				</div>
 			</div>

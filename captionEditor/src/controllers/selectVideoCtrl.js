@@ -4,6 +4,8 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 
 	$scope.newMedia = {};
 
+	$scope.loading = false;
+
 
 
 
@@ -32,25 +34,26 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 	$scope.getVideoList();
 
 	$scope.selectedFile = function(file){
+		console.log("selected file", file)
+		// $scope.newMedia.filename = file.name;
+		// if($scope.newMedia.filename.length > 100){
+		// 	$scope.errorMessage = "The filename cant be longer than 100 characters, this one is: " + $scope.newMedia.filename.length;
+		// 	return;
+		// }
 
-		$scope.newMedia.filename = file.name;
-		if($scope.newMedia.filename.length > 100){
-			$scope.errorMessage = "The filename cant be longer than 100 characters, this one is: " + $scope.newMedia.filename.length;
-			return;
-		}
-
-		$scope.newMedia.stringType = file.type;
+		// $scope.newMedia.stringType = file.type;
 
 		$scope.newMedia.type = 3;// unknown
-		if(file.type && file.type.substr(0, 5) == 'video')
+		if(file.contentType && file.contentType.substr(0, 5) == 'video')
 			$scope.newMedia.type = 1;
-		else if(file.type && file.type.substr(0, 5) == 'audio')
+		else if(file.contentType && file.contentType.substr(0, 5) == 'audio')
 			$scope.newMedia.type = 2;
 
 
-		console.log($scope.newMedia)
-		$scope.$apply();
+		// console.log($scope.newMedia)
+		// $scope.$apply();
 	}
+
 
 	$scope.useThisMedia = function(media){
 		$location.path("/modify/" + media.id + "/none/none");
@@ -61,14 +64,20 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 			$scope.errorMessage = "All the fields above need values before saving this to the server";
 			// log error
 			return;
-		}	
+		}
+		$scope.loading = true;
 		newMedia.id = 0;
 		newMedia.audioLanguageId = newMedia.audioLanguage.id;
-
-		console.log(angular.toJson(newMedia))
+		var base64String = newMedia.base64Data;
+		delete newMedia.base64Data;
+		// console.log(angular.toJson(newMedia))
 		mediaFactory.putMedia(newMedia).then(function(data){
 			console.log("returned media: ", data);
-			$location.path("/" + data.id);
+			mediaFactory.saveMedia(base64String, data.id, newMedia.contentType).then(function(data){
+				console.log("returned saveMedia");
+				$scope.loading = false;
+				$location.path("/" + data.id);
+			});
 		});
 	}
 	

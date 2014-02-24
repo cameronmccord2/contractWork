@@ -1,5 +1,5 @@
 <div class="mModalCloseBackground">
-	<div class="mChangeVideoModal">
+	<div class="mChangeVideoModal" ng-hide="loading">
 		<!-- <div class="mModalCloseButton" ng-click="closeChangeVideoModal()"><img class="mModalCloseButtonImage" ng-click="closeChangeVideoModal()" src="assets/exit.png"></div> -->
 		<div class="mModalTitle">Select/Change Current Video</div>
 		<div class="clear"></div>
@@ -18,13 +18,14 @@
 		Add subtitles to new media
 		<input ng-model="newMedia.name" placeholder="Name" maxlength="100"><br>
 		Filename: {{newMedia.filename}}<br>
-		Type: {{newMedia.stringType}}<br>
+		Type: {{newMedia.type}}<br>
 		Primary Audio Language: <select ng-model="newMedia.audioLanguage" ng-options="language as language.name for language in languages"></select><br>
 
-		<input type="file" ng-model="file" accept="video/mp4" app-filereader ng-change="selectedFile(file)"/>
+		<input type="file" ng-model="newMedia" accept="video/mp4" app-filereader ng-change="selectedFile(newMedia)"/>
 		<div ng-show="errorMessage.length" style="color:red;">{{errorMessage}}</div>
 		<div class="clear"></div>
 		<button ng-click="saveNewMedia(newMedia)">Save new media to database</button>
+		<!-- <video src="" controls></video> -->
 		<!-- <video id="videoPlayer" type="{{dummy.type}}" ng-src="{{dummy.url}}" ng-src controls> -->
 		
  
@@ -47,5 +48,8 @@
 			<div class="mVideoAttribute"><b>Current languages with subtitles:</b> {{captionList}}</div>
 			<div class="mErrorMessage" ng-show="showErrorMessage">{{errorMessage}}</div>
 		</div> -->
+	</div>
+	<div ng-show="loading" class="mChangeVideoModal">
+		<div class="mModalTitle">Uploading video</div>
 	</div>
 </div>

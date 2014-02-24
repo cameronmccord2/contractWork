@@ -2,7 +2,7 @@
 //  ANGULAR MODULE SETUP
 //*****************************************************************************
 
-var app = angular.module('MEDIAPORTALCAPTIONEDITOR', ['CaptionServices', 'directives', 'ngRoute', 'AuthenticationService']);
+var app = angular.module('MEDIAPORTALCAPTIONEDITOR', ['CaptionServices', 'directives', 'ngSanitize', 'ngRoute', 'AuthenticationService', 'base64']);
 
 app.config(['$routeProvider', function($routeProvider) {
 // Configureable Options:
@@ -16,13 +16,17 @@ app.config(['$routeProvider', function($routeProvider) {
 
 }]);
 
-app.config(['AuthServiceProvider', function(AuthServiceProvider){
+app.config(['AuthServiceProvider', '$sceProvider', function(AuthServiceProvider, $sceProvider){
+	$sceProvider.enabled(false);
 
 	  function determineRedirectUri() {// allows us to not have to change the client id every time we move environments
 		  	var cs = 'http://students.cs.byu.edu/~cmccord/contractWork/captionEditor',
-				local = 'https://localhost/contractWork/captionEditor';
+				localSecure = 'https://localhost/contractWork/captionEditor',
+				local = "http://localhost:8080/contractWork/captionEditor"
 			console.log(window.location)
 			if (window.location.host === 'localhost')
+				return localSecure;
+			if(window.location.host === "localhost:8080")
 				return local;
 			if (window.location.host === 'students.cs.byu.edu')
 				return cs;
@@ -30,7 +34,7 @@ app.config(['AuthServiceProvider', function(AuthServiceProvider){
 			throw new Error("App is running in an unknown environment. Please check URL");
 		}
 		
-		AuthServiceProvider.setClientID('185872110398-icdle47mq6dtff0ktdpc7qrpojkh5jrj.apps.googleusercontent.com');
+		AuthServiceProvider.setClientID('894693310950-2mfqku9n95q83dkk64ttdn4rn6flqris.apps.googleusercontent.com');
 		AuthServiceProvider.pushScope('https://www.googleapis.com/auth/plus.me');
 		AuthServiceProvider.setRedirectURI(determineRedirectUri());
 }]);
@@ -69,3 +73,55 @@ app.run(function($rootScope, $http, AuthService){
 //       _V_.get(this.src, this.proxy(this.parseCues), this.proxy(this.onError));
 //     }
 // parseCues function on line 3972
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
