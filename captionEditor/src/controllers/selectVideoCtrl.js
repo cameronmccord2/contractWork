@@ -3,12 +3,66 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 	$scope.showErrorMessage = false;
 
 	$scope.newMedia = {};
+	$scope.fixMedia = {};
 
 	$scope.loading = false;
 
+	$scope.changedSelectedMedia = function(selectedMedia){
+		console.log("Selected: ", selectedMedia);
+	}
 
+	$scope.deleteThisMedia = function(media){
+		if(media && media.id){
+			var p = prompt("Are you sure? Type DELETE in all caps to confirm. This cannot be undone and will delete all subtitles and popups with this media.");
+			if(p != null && p == "DELETE"){
+				console.log("deleting")
+				$scope.loading = true;
+				mediaFactory.deleteMediaById(media.id).then(function(data){
+					$scope.loading = false;
+					console.log("done");
+					$route.reload();
+				}, function(data){
+					$scope.loading = false;
+					alert("delete failed, error in console");
+					console.log("error data: ", data);
+				});
+			}
+		}
+	}
 
+	$scope.saveFixedFile = function(file){
+		
+		if(file.base64Data && $scope.selectedMedia.name){
+			console.log("got fix file: ", file);
+			$scope.loading = true;
+			file.id = $scope.selectedMedia.id;
+			file.audioLanguageId = $scope.selectedMedia.audioLanguageId;
+			file.type = $scope.selectedMedia.type;
+			file.name = $scope.selectedMedia.name;
+			// filename is really the only thing changing, already on file
 
+			var base64String = file.base64Data;
+			delete file.base64Data;
+			console.log(file);
+
+			mediaFactory.putMedia(file).then(function(data){
+				console.log("returned updated media: ", data);
+				mediaFactory.saveMedia(base64String, data.id, file.contentType).then(function(newFilenameInBucket){
+					console.log("returned updated saveMedia");
+					$scope.loading = false;
+					$location.path("/" + data.id);
+				}, function(data){
+					alert("saving the media data failed, please try again");
+					console.log(data);
+					$scope.loading = false;
+				});
+			});
+		}
+	}
+
+	$scope.fixFile = function(){
+		// odnt do anything
+	}
 
 	$scope.getAllLanguages = function(){
 		languagesFactory.getLanguages().then(function(data){
@@ -77,6 +131,9 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 				console.log("returned saveMedia");
 				$scope.loading = false;
 				$location.path("/" + data.id);
+			}, function(data){
+				// console.log("failed to save media", data, status, headers, config);
+				alert("there was an error saving that video data, please select this media from the top list and reupload the file");
 			});
 		});
 	}

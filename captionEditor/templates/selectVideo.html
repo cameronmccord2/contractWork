@@ -5,13 +5,26 @@
 		<div class="clear"></div>
 <!-- break this up into video /audio? -->
 		Select existing media to edit:
-		<select ng-model="selectedMedia" ng-options="media as media.name for media in allMedia"></select>
+		<select ng-model="selectedMedia" ng-options="media as media.name for media in allMedia" ng-change="changedSelectedMedia(selectedMedia)"></select>
 		<button ng-click="useThisMedia(selectedMedia)">Edit this media</button>
+		<button ng-click="deleteThisMedia(selectedMedia)">Delete this media</button>
 		<div class="clear"></div>
 		Name: {{selectedMedia.name}}<br>
 		Filename: {{selectedMedia.filename}}<br>
 		Type: {{getMediaType(selectedMedia.type)}}<br>
-		Primary Audio Language: {{languageNameForId(selectedMedia.audioLanguageId)}}<br>
+		Primary Audio Language: {{languageNameForId(selectedMedia.audioLanguageId)}}<br><br>
+		<div ng-show="selectedMedia.name">
+			<div ng-show="selectedMedia.bucketId == 0">
+				<div style="color:red">This video appears to be broken; it may not have uploaded correctly. Please reupload it.</div>
+			</div>
+			<div ng-hide="selectedMedia.bucketId == 0">
+				You can change the file for the selected media. Warning: If the timing is different it will mess up subtitle and popup times.
+			</div>
+
+			<input type="file" ng-model="fixMedia" accept="video/mp4" app-filereader ng-change="fixFile(fixMedia)"/>
+			<button ng-click="saveFixedFile(fixMedia)">Save</button>
+		</div>
+		
 		<br><br><br><br>
 
 

@@ -62,7 +62,7 @@ angular.module('CaptionServices', [])
 			defer.resolve(data);
 		}).error(function(data, status, headers, config){
 			console.log("put media fail", data, status, headers, config);
-			defer.reject();
+			defer.reject(data);
 		});
 		return defer.promise;
 	}
@@ -83,6 +83,22 @@ angular.module('CaptionServices', [])
 		}).error(function(data, status, headers, config){
 			console.log("put saveMedia fail", data, status, headers, config);
 			defer.reject();
+		});
+		return defer.promise;
+	}
+
+	factory.deleteMediaById = function(id){
+		var defer = $q.defer();
+		var options = {
+			params:{
+				id:id
+			}
+		};
+		$http.delete(serverPath + mediaPath, options).success(function(data){
+			defer.resolve(data);
+		}).error(function(data, status, headers, config){
+			console.log("delete media fail, id: " + id, data, status, headers, config);
+			defer.reject(data);
 		});
 		return defer.promise;
 	}
