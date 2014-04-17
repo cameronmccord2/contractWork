@@ -13,14 +13,14 @@
 
 @interface Captions : NSManagedObject
 
-@property (nonatomic, retain) NSNumber * id;
 @property (nonatomic, retain) NSString * caption;
+@property (nonatomic, retain) NSNumber * endTime;
+@property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSNumber * languageId;
 @property (nonatomic, retain) NSNumber * mediaId;
 @property (nonatomic, retain) NSNumber * startTime;
-@property (nonatomic, retain) NSNumber * endTime;
-@property (nonatomic, retain) NSNumber * languageId;
 @property (nonatomic, retain) NSNumber * type;
-@property (nonatomic, retain) Medias *media;
 @property (nonatomic, retain) Languages *language;
+@property (nonatomic, retain) Medias *media;
 
 @end

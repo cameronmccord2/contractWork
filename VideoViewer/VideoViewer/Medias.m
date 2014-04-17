@@ -14,16 +14,17 @@
 
 @implementation Medias
 
-@dynamic name;
-@dynamic id;
-@dynamic filename;
-@dynamic filenameInBucket;
 @dynamic audioLanguageId;
 @dynamic bucketId;
-@dynamic type;
 @dynamic extension;
+@dynamic filename;
+@dynamic filenameInBucket;
+@dynamic id;
+@dynamic name;
+@dynamic type;
+@dynamic bucketName;
 @dynamic captions;
-@dynamic popups;
 @dynamic language;
+@dynamic popups;
 
 @end

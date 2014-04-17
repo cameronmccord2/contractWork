@@ -13,17 +13,18 @@
 
 @interface Medias : NSManagedObject
 
-@property (nonatomic, retain) NSString * name;
-@property (nonatomic, retain) NSNumber * id;
-@property (nonatomic, retain) NSString * filename;
-@property (nonatomic, retain) NSString * filenameInBucket;
 @property (nonatomic, retain) NSNumber * audioLanguageId;
 @property (nonatomic, retain) NSNumber * bucketId;
-@property (nonatomic, retain) NSNumber * type;
 @property (nonatomic, retain) NSString * extension;
+@property (nonatomic, retain) NSString * filename;
+@property (nonatomic, retain) NSString * filenameInBucket;
+@property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSString * name;
+@property (nonatomic, retain) NSNumber * type;
+@property (nonatomic, retain) NSString * bucketName;
 @property (nonatomic, retain) NSSet *captions;
-@property (nonatomic, retain) NSSet *popups;
 @property (nonatomic, retain) Languages *language;
+@property (nonatomic, retain) NSSet *popups;
 @end
 
 @interface Medias (CoreDataGeneratedAccessors)

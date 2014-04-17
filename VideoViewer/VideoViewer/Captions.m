@@ -13,14 +13,14 @@
 
 @implementation Captions
 
-@dynamic id;
 @dynamic caption;
+@dynamic endTime;
+@dynamic id;
+@dynamic languageId;
 @dynamic mediaId;
 @dynamic startTime;
-@dynamic endTime;
-@dynamic languageId;
 @dynamic type;
-@dynamic media;
 @dynamic language;
+@dynamic media;
 
 @end

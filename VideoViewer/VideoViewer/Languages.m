@@ -14,14 +14,14 @@
 
 @implementation Languages
 
-@dynamic name;
-@dynamic mtcId;
 @dynamic code1;
 @dynamic code2;
 @dynamic id;
+@dynamic mtcId;
+@dynamic name;
 @dynamic nativeName;
+@dynamic captions;
 @dynamic medias;
 @dynamic popups;
-@dynamic captions;
 
 @end

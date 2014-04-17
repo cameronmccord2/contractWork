@@ -102,7 +102,7 @@
 
 
 
-- (NSFetchedResultsController *)fetchedResultsController {
+-(NSFetchedResultsController *)fetchedResultsController {
     if (_fetchedResultsController != nil) {
         return _fetchedResultsController;
     }

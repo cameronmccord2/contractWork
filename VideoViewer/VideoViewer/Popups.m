@@ -13,17 +13,18 @@
 
 @implementation Popups
 
-@dynamic displayName;
-@dynamic popupText;
-@dynamic mediaId;
-@dynamic languageId;
-@dynamic startTime;
-@dynamic endTime;
-@dynamic filename;
 @dynamic bucketId;
-@dynamic filenameInBucket;
+@dynamic displayName;
+@dynamic endTime;
 @dynamic extension;
-@dynamic media;
+@dynamic filename;
+@dynamic filenameInBucket;
+@dynamic languageId;
+@dynamic mediaId;
+@dynamic popupText;
+@dynamic startTime;
+@dynamic bucketName;
 @dynamic language;
+@dynamic media;
 
 @end

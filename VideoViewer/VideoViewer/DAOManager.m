@@ -279,7 +279,8 @@ enum{
         NSLog(@"created new connection data for tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
         NSMutableData *newData = [[NSMutableData alloc] initWithData:data];
         [dataFromConnectionByTag setObject:newData forKey:connection.uniqueTag];
-        connection.nsProgress.completedUnitCount = data.length;// first time
+        connection.nsProgress.completedUnitCount += data.length;// first time
+        
         return;
     }else{
 //        NSLog(@"saving data for connection tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
@@ -298,6 +299,7 @@ enum{
 - (void) connection:(NSURLConnectionWithExtras *)connection didReceiveResponse:(NSURLResponse *)response{
     NSLog(@"did recieve response");
     if([response isKindOfClass:[NSHTTPURLResponse class]]){
+        NSLog(@"in here");
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         [connection setStatusCodeForNow:[httpResponse statusCode]];
         //        if ([connection.typeTag isEqualToNumber:typeUserExists]) {
@@ -315,6 +317,8 @@ enum{
         
         // NSProgress
         connection.nsProgress.totalUnitCount = response.expectedContentLength;
+        NSLog(@"expected content length: %ld", (long)response.expectedContentLength);
+        connection.nsProgress.completedUnitCount = 0.0f;
         [self doThenWithData:[dataFromConnectionByTag objectForKey:connection.uniqueTag] connection:connection];
     }
 }

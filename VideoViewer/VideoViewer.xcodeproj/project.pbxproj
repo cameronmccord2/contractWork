@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E45F416F19005E1A009D21D7 /* Medias.m in Sources */ = {isa = PBXBuildFile; fileRef = E45F416E19005E1A009D21D7 /* Medias.m */; };
+		E45F417219005E1B009D21D7 /* Popups.m in Sources */ = {isa = PBXBuildFile; fileRef = E45F417119005E1B009D21D7 /* Popups.m */; };
+		E45F417519005E1B009D21D7 /* Languages.m in Sources */ = {isa = PBXBuildFile; fileRef = E45F417419005E1B009D21D7 /* Languages.m */; };
+		E45F417819005E1B009D21D7 /* Captions.m in Sources */ = {isa = PBXBuildFile; fileRef = E45F417719005E1B009D21D7 /* Captions.m */; };
 		E4D5605118FF9A1100263AC4 /* VideoListTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5605018FF9A1100263AC4 /* VideoListTableViewController.m */; };
 		E4D5606718FFAF4D00263AC4 /* VideoPlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5606618FFAF4D00263AC4 /* VideoPlayerViewController.m */; };
 		E4D5606918FFB22300263AC4 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4D5606818FFB22300263AC4 /* MediaPlayer.framework */; };
@@ -17,10 +21,6 @@
 		E4D5607C18FFB3B700263AC4 /* NSURLAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5607318FFB3B700263AC4 /* NSURLAdditions.m */; };
 		E4D5607D18FFB3B700263AC4 /* NSURLConnectionWithExtras.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5607518FFB3B700263AC4 /* NSURLConnectionWithExtras.m */; };
 		E4D5607E18FFB3B700263AC4 /* Random.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5607718FFB3B700263AC4 /* Random.m */; };
-		E4D5609218FFBBFE00263AC4 /* Medias.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5609118FFBBFE00263AC4 /* Medias.m */; };
-		E4D5609518FFBBFE00263AC4 /* Captions.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5609418FFBBFE00263AC4 /* Captions.m */; };
-		E4D5609818FFBBFE00263AC4 /* Popups.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5609718FFBBFE00263AC4 /* Popups.m */; };
-		E4D5609B18FFD45900263AC4 /* Languages.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5609A18FFD45900263AC4 /* Languages.m */; };
 		E4DDCF9F18FF983D002688E9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4DDCF9E18FF983D002688E9 /* Foundation.framework */; };
 		E4DDCFA118FF983D002688E9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4DDCFA018FF983D002688E9 /* CoreGraphics.framework */; };
 		E4DDCFA318FF983D002688E9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4DDCFA218FF983D002688E9 /* UIKit.framework */; };
@@ -49,6 +49,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E45F416D19005E1A009D21D7 /* Medias.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Medias.h; sourceTree = "<group>"; };
+		E45F416E19005E1A009D21D7 /* Medias.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Medias.m; sourceTree = "<group>"; };
+		E45F417019005E1B009D21D7 /* Popups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Popups.h; sourceTree = "<group>"; };
+		E45F417119005E1B009D21D7 /* Popups.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Popups.m; sourceTree = "<group>"; };
+		E45F417319005E1B009D21D7 /* Languages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Languages.h; sourceTree = "<group>"; };
+		E45F417419005E1B009D21D7 /* Languages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Languages.m; sourceTree = "<group>"; };
+		E45F417619005E1B009D21D7 /* Captions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Captions.h; sourceTree = "<group>"; };
+		E45F417719005E1B009D21D7 /* Captions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Captions.m; sourceTree = "<group>"; };
 		E4D5604F18FF9A1100263AC4 /* VideoListTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoListTableViewController.h; sourceTree = "<group>"; };
 		E4D5605018FF9A1100263AC4 /* VideoListTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoListTableViewController.m; sourceTree = "<group>"; };
 		E4D5606518FFAF4D00263AC4 /* VideoPlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoPlayerViewController.h; sourceTree = "<group>"; };
@@ -68,14 +76,6 @@
 		E4D5607518FFB3B700263AC4 /* NSURLConnectionWithExtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSURLConnectionWithExtras.m; sourceTree = "<group>"; };
 		E4D5607618FFB3B700263AC4 /* Random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Random.h; sourceTree = "<group>"; };
 		E4D5607718FFB3B700263AC4 /* Random.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Random.m; sourceTree = "<group>"; };
-		E4D5609018FFBBFE00263AC4 /* Medias.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Medias.h; sourceTree = "<group>"; };
-		E4D5609118FFBBFE00263AC4 /* Medias.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Medias.m; sourceTree = "<group>"; };
-		E4D5609318FFBBFE00263AC4 /* Captions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Captions.h; sourceTree = "<group>"; };
-		E4D5609418FFBBFE00263AC4 /* Captions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Captions.m; sourceTree = "<group>"; };
-		E4D5609618FFBBFE00263AC4 /* Popups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Popups.h; sourceTree = "<group>"; };
-		E4D5609718FFBBFE00263AC4 /* Popups.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Popups.m; sourceTree = "<group>"; };
-		E4D5609918FFD45900263AC4 /* Languages.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Languages.h; path = VideoViewer/Languages.h; sourceTree = "<group>"; };
-		E4D5609A18FFD45900263AC4 /* Languages.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Languages.m; path = VideoViewer/Languages.m; sourceTree = "<group>"; };
 		E4DDCF9B18FF983D002688E9 /* VideoViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VideoViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4DDCF9E18FF983D002688E9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		E4DDCFA018FF983D002688E9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -161,14 +161,6 @@
 		E4DDCF9218FF983D002688E9 = {
 			isa = PBXGroup;
 			children = (
-				E4D5609618FFBBFE00263AC4 /* Popups.h */,
-				E4D5609718FFBBFE00263AC4 /* Popups.m */,
-				E4D5609318FFBBFE00263AC4 /* Captions.h */,
-				E4D5609418FFBBFE00263AC4 /* Captions.m */,
-				E4D5609018FFBBFE00263AC4 /* Medias.h */,
-				E4D5609118FFBBFE00263AC4 /* Medias.m */,
-				E4D5609918FFD45900263AC4 /* Languages.h */,
-				E4D5609A18FFD45900263AC4 /* Languages.m */,
 				E4DDCFA618FF983D002688E9 /* VideoViewer */,
 				E4DDCFC318FF983D002688E9 /* VideoViewerTests */,
 				E4DDCF9D18FF983D002688E9 /* Frameworks */,
@@ -210,6 +202,14 @@
 				E4D5605818FFA81600263AC4 /* Models */,
 				E4DDCFB518FF983D002688E9 /* Images.xcassets */,
 				E4DDCFB218FF983D002688E9 /* VideoViewer.xcdatamodeld */,
+				E45F417619005E1B009D21D7 /* Captions.h */,
+				E45F417719005E1B009D21D7 /* Captions.m */,
+				E45F417319005E1B009D21D7 /* Languages.h */,
+				E45F417419005E1B009D21D7 /* Languages.m */,
+				E45F417019005E1B009D21D7 /* Popups.h */,
+				E45F417119005E1B009D21D7 /* Popups.m */,
+				E45F416D19005E1A009D21D7 /* Medias.h */,
+				E45F416E19005E1A009D21D7 /* Medias.m */,
 				E4D5606518FFAF4D00263AC4 /* VideoPlayerViewController.h */,
 				E4D5606618FFAF4D00263AC4 /* VideoPlayerViewController.m */,
 				E4DDCFA718FF983D002688E9 /* Supporting Files */,
@@ -346,16 +346,16 @@
 			files = (
 				E4D5607C18FFB3B700263AC4 /* NSURLAdditions.m in Sources */,
 				E4D5607B18FFB3B700263AC4 /* NSStringAdditions.m in Sources */,
-				E4D5609518FFBBFE00263AC4 /* Captions.m in Sources */,
+				E45F417519005E1B009D21D7 /* Languages.m in Sources */,
 				E4DDCFB418FF983D002688E9 /* VideoViewer.xcdatamodeld in Sources */,
 				E4D5607E18FFB3B700263AC4 /* Random.m in Sources */,
-				E4D5609218FFBBFE00263AC4 /* Medias.m in Sources */,
 				E4DDCFB118FF983D002688E9 /* AppDelegate.m in Sources */,
+				E45F417819005E1B009D21D7 /* Captions.m in Sources */,
 				E4D5607A18FFB3B700263AC4 /* VPDaoV1.m in Sources */,
 				E4D5607D18FFB3B700263AC4 /* NSURLConnectionWithExtras.m in Sources */,
+				E45F416F19005E1A009D21D7 /* Medias.m in Sources */,
+				E45F417219005E1B009D21D7 /* Popups.m in Sources */,
 				E4D5607918FFB3B700263AC4 /* DAOManager.m in Sources */,
-				E4D5609818FFBBFE00263AC4 /* Popups.m in Sources */,
-				E4D5609B18FFD45900263AC4 /* Languages.m in Sources */,
 				E4D5607818FFB3B700263AC4 /* CallQueue.m in Sources */,
 				E4DDCFAD18FF983D002688E9 /* main.m in Sources */,
 				E4D5606718FFAF4D00263AC4 /* VideoPlayerViewController.m in Sources */,

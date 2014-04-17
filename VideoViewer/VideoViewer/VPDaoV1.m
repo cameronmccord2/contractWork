@@ -17,7 +17,7 @@
 NSString *baseUrl = @"http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/";
 NSString *getMediasUrl = @"medias";
 NSString *mediaUrl = @"mediaFile";
-NSString *videoUrl = @"";
+NSString *videoUrl = @"https://s3-us-west-2.amazonaws.com/";
 
 
 @implementation VPDaoV1
@@ -50,7 +50,7 @@ enum{
 }
 
 -(NSString *)getVideoUrl{
-    return [NSString stringWithFormat:@"%@%@", baseUrl, getMediasUrl];
+    return videoUrl;
 }
 
 -(void)getVideoData:(id<VPDaoV1DelegateProtocol>)delegate media:(Medias *)media{
@@ -67,8 +67,8 @@ enum{
             [self respondWithThisFile:fullFilePath toDelegate:delegate];
         };
         
-        NSString *url = [NSString stringWithFormat:@"%@%@", baseUrl, mediaUrl];
-        url = [url URLStringByAppendingQueryStringKey:@"mediaid" value:[media.id stringValue]];
+        NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, media.bucketName, media.filenameInBucket];
+//        url = [url URLStringByAppendingQueryStringKey:@"mediaid" value:[media.id stringValue]];
         [self genericGetFunctionForDelegate:delegate forUrl:url requestType:NormalType success:success error:[self errorTemplateForDelegate:delegate selectorOnError:nil] then:[self thenTemplateForDelegate:delegate selectorOnThen:@selector(videoDataThen:progress:)]];
     }
 }
@@ -129,6 +129,7 @@ enum{
                 media.type = d[@"type"];
                 media.extension = d[@"extension"];
                 media.language = language;
+                media.bucketName = d[@"bucketName"];
                 
                 // captions
                 NSMutableSet *captions = [[NSMutableSet alloc] initWithCapacity:[d[@"captions"] count]];

@@ -13,18 +13,23 @@
 
 @interface Languages : NSManagedObject
 
-@property (nonatomic, retain) NSString * name;
-@property (nonatomic, retain) NSString * mtcId;
 @property (nonatomic, retain) NSString * code1;
 @property (nonatomic, retain) NSString * code2;
 @property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSString * mtcId;
+@property (nonatomic, retain) NSString * name;
 @property (nonatomic, retain) NSString * nativeName;
+@property (nonatomic, retain) NSSet *captions;
 @property (nonatomic, retain) NSSet *medias;
 @property (nonatomic, retain) NSSet *popups;
-@property (nonatomic, retain) NSSet *captions;
 @end
 
 @interface Languages (CoreDataGeneratedAccessors)
+
+- (void)addCaptionsObject:(Captions *)value;
+- (void)removeCaptionsObject:(Captions *)value;
+- (void)addCaptions:(NSSet *)values;
+- (void)removeCaptions:(NSSet *)values;
 
 - (void)addMediasObject:(Medias *)value;
 - (void)removeMediasObject:(Medias *)value;
@@ -35,10 +40,5 @@
 - (void)removePopupsObject:(Popups *)value;
 - (void)addPopups:(NSSet *)values;
 - (void)removePopups:(NSSet *)values;
-
-- (void)addCaptionsObject:(Captions *)value;
-- (void)removeCaptionsObject:(Captions *)value;
-- (void)addCaptions:(NSSet *)values;
-- (void)removeCaptions:(NSSet *)values;
 
 @end
