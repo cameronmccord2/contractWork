@@ -6,10 +6,11 @@
 <!-- break this up into video /audio? -->
 		Select existing media to edit:
 		<select ng-model="selectedMedia" ng-options="media as media.name for media in allMedia" ng-change="changedSelectedMedia(selectedMedia)"></select>
-		<button ng-click="useThisMedia(selectedMedia)">Edit this media</button>
-		<button ng-click="deleteThisMedia(selectedMedia)">Delete this media</button>
+		<button ng-click="useThisMedia(selectedMedia)" ng-show="selectedMedia">Edit this media</button>
+		<button ng-click="deleteThisMedia(selectedMedia)" ng-show="selectedMedia">Delete this media</button>
 		<div class="clear"></div>
-		Name: {{selectedMedia.name}}<br>
+		Name: <input type="text" ng-model="selectedMedia.name" placeholder="Name" ng-show="selectedMedia">
+		<button ng-click="saveNameChange(selectedMedia)" ng-show="selectedMedia">Save Name</button>{{thinkingMessage}}<br>
 		Filename: {{selectedMedia.filename}}<br>
 		Type: {{getMediaType(selectedMedia.type)}}<br>
 		Primary Audio Language: {{languageNameForId(selectedMedia.audioLanguageId)}}<br><br>

@@ -1,6 +1,7 @@
-function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $location, mediaFactory, languagesFactory){
+function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $location, $timeout, mediaFactory, languagesFactory){
 	$scope.errorMessage = "";
 	$scope.showErrorMessage = false;
+	$scope.thinkingMessage = "";
 
 	$scope.newMedia = {};
 	$scope.fixMedia = {};
@@ -28,6 +29,19 @@ function selectVideoCtrl($scope, $routeParams, $rootScope, $route, $http, $locat
 				});
 			}
 		}
+	}
+
+	$scope.saveNameChange = function(media){
+		$scope.thinkingMessage = "Saving";
+		mediaFactory.updateMediaName(media.id, media.name).then(function(){
+			$scope.thinkingMessage = "Saved";
+			$timeout(function(){
+				$scope.thinkingMessage = "";
+			}, 2000);
+		}, function(){
+			$scope.errorMessage = "There was an error updating the name";
+			$scope.showErrorMessage = true;
+		});
 	}
 
 	$scope.saveFixedFile = function(file){

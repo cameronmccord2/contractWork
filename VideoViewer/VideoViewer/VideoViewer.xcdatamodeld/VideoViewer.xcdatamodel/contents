@@ -1,4 +1,58 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model name="Test1.xcdatamodel" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
-    <elements/>
+<model userDefinedModelVersionIdentifier="0.2" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="5063" systemVersion="13C64" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Captions" representedClassName="Captions" syncable="YES">
+        <attribute name="caption" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="endTime" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="languageId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mediaId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="startTime" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="language" maxCount="1" deletionRule="Nullify" destinationEntity="Languages" inverseName="captions" inverseEntity="Languages" syncable="YES"/>
+        <relationship name="media" maxCount="1" deletionRule="Nullify" destinationEntity="Medias" inverseName="captions" inverseEntity="Medias" syncable="YES"/>
+    </entity>
+    <entity name="Languages" representedClassName="Languages" syncable="YES">
+        <attribute name="code1" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="code2" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mtcId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="nativeName" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="captions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Captions" inverseName="language" inverseEntity="Captions" syncable="YES"/>
+        <relationship name="medias" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Medias" inverseName="language" inverseEntity="Medias" syncable="YES"/>
+        <relationship name="popups" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Popups" inverseName="language" inverseEntity="Popups" syncable="YES"/>
+    </entity>
+    <entity name="Medias" representedClassName="Medias" syncable="YES">
+        <attribute name="audioLanguageId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="bucketId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="extension" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="filename" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="filenameInBucket" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="captions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Captions" inverseName="media" inverseEntity="Captions" syncable="YES"/>
+        <relationship name="language" maxCount="1" deletionRule="Nullify" destinationEntity="Languages" inverseName="medias" inverseEntity="Languages" syncable="YES"/>
+        <relationship name="popups" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Popups" inverseName="media" inverseEntity="Popups" syncable="YES"/>
+    </entity>
+    <entity name="Popups" representedClassName="Popups" syncable="YES">
+        <attribute name="bucketId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="displayName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="endTime" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="extension" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="filename" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="filenameInBucket" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="languageId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="mediaId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="popupText" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="startTime" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <relationship name="language" maxCount="1" deletionRule="Nullify" destinationEntity="Languages" inverseName="popups" inverseEntity="Languages" syncable="YES"/>
+        <relationship name="media" maxCount="1" deletionRule="Nullify" destinationEntity="Medias" inverseName="popups" inverseEntity="Medias" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Medias" positionX="-63" positionY="-18" width="128" height="208"/>
+        <element name="Captions" positionX="-54" positionY="36" width="128" height="178"/>
+        <element name="Languages" positionX="-36" positionY="90" width="128" height="178"/>
+        <element name="Popups" positionX="-27" positionY="99" width="128" height="223"/>
+    </elements>
 </model>

@@ -67,6 +67,23 @@ angular.module('CaptionServices', [])
 		return defer.promise;
 	}
 
+	factory.updateMediaName = function(mediaId, name){
+		var defer = $q.defer();
+		var options = {
+			params:{
+				mediaId:mediaId,
+				name:name
+			}
+		};
+		$http.put(serverPath + mediaPath + "/name", {}, options).success(function(data){
+			defer.resolve(data);
+		}).error(function(data, status, headers, config){
+			console.log("put media name update fail", data, status, headers, config);
+			defer.reject(data);
+		});
+		return defer.promise;
+	}
+
 	factory.saveMedia = function(base64String, mediaId, contentType){
 		var defer = $q.defer();
 		var options = {
