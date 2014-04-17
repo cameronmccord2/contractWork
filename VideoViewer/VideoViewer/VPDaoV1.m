@@ -164,6 +164,7 @@ enum{
                     p.bucketId = d2[@"bucketId"];
                     p.filenameInBucket = d2[@"filenameInBucket"];
                     p.extension = d2[@"extension"];
+                    p.bucketName = d2[@"bucketName"];
                     p.language = language;
                     p.media = media;
                     [popups addObject:p];
