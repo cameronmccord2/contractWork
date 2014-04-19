@@ -68,7 +68,6 @@
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     Medias *media = [self.fetchedResultsController objectAtIndexPath:indexPath];
-    NSLog(@"%@", media);
     VideoPlayerViewController *vpvc = [[VideoPlayerViewController alloc] initWithContext:self.managedObjectContext media:media];
     [[self navigationController] pushViewController:vpvc animated:YES];
 }

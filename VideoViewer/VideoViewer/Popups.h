@@ -24,6 +24,7 @@
 @property (nonatomic, retain) NSString * popupText;
 @property (nonatomic, retain) NSNumber * startTime;
 @property (nonatomic, retain) NSString * bucketName;
+@property (nonatomic, retain) NSNumber * id;
 @property (nonatomic, retain) Languages *language;
 @property (nonatomic, retain) Medias *media;
 

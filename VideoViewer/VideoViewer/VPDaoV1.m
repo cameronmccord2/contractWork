@@ -57,9 +57,42 @@ enum{
     
     NSString *fullFileName = [NSString stringWithFormat:@"%@%@", media.filenameInBucket, media.extension];
     NSString *fileString = [NSString stringWithFormat:@"%@/%@", videoFilePath, fullFileName];
-    if ([self doesFileExist:fileString]) {
+    if([self pathForFileInBundleWithFilename:media.filenameInBucket extension:media.extension] != nil){
+        NSLog(@"found in bundle");
+        [self respondWithThisFile:[self pathForFileInBundleWithFilename:media.filenameInBucket extension:media.extension] toDelegate:delegate];
+    }else if ([self doesFileExist:fileString]) {
         [self respondWithThisFile:fileString toDelegate:delegate];
+    }else{
+        // go get it
+        void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
+            NSString *fullFilePath = [self saveThisFile:data filename:fullFileName folderContainingFile:videoFilePath];
+            [self respondWithThisFile:fullFilePath toDelegate:delegate];
+        };
         
+        NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, media.bucketName, media.filenameInBucket];
+        [self genericGetFunctionForDelegate:delegate forUrl:url requestType:NormalType success:success error:[self errorTemplateForDelegate:delegate selectorOnError:nil] then:[self thenTemplateForDelegate:delegate selectorOnThen:@selector(videoDataThen:progress:)]];
+    }
+}
+
+-(NSString *)pathForFileInBundleWithFilename:(NSString *)filename extension:(NSString *)extension{
+    // add ability for extension to be null and pull the extension off of the filename
+    if (extension == nil) {
+        return nil;// doesnt do that yet
+    }
+    NSString *path = [[NSBundle mainBundle] pathForResource:filename ofType:extension];
+    return path;
+}
+
+-(void)getPopupData:(id<VPDaoV1DelegateProtocol>)delegate popup:(Popups *)popup{
+    
+    NSString *fullFileName = [NSString stringWithFormat:@"%@%@", popup.filenameInBucket, popup.extension];
+    NSString *fileString = [NSString stringWithFormat:@"%@/%@", videoFilePath, fullFileName];
+    
+    if([self pathForFileInBundleWithFilename:popup.filenameInBucket extension:popup.extension] != nil){
+//        NSLog(@"found in bundle");
+        [self respondWithThisFile:[self pathForFileInBundleWithFilename:popup.filenameInBucket extension:popup.extension] toDelegate:delegate];
+    }else if ([self doesFileExist:fileString]) {
+        [self respondWithThisFile:fileString toDelegate:delegate];
     }else{
         
         void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
@@ -67,8 +100,7 @@ enum{
             [self respondWithThisFile:fullFilePath toDelegate:delegate];
         };
         
-        NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, media.bucketName, media.filenameInBucket];
-//        url = [url URLStringByAppendingQueryStringKey:@"mediaid" value:[media.id stringValue]];
+        NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, popup.bucketName, popup.filenameInBucket];
         [self genericGetFunctionForDelegate:delegate forUrl:url requestType:NormalType success:success error:[self errorTemplateForDelegate:delegate selectorOnError:nil] then:[self thenTemplateForDelegate:delegate selectorOnThen:@selector(videoDataThen:progress:)]];
     }
 }
@@ -165,6 +197,7 @@ enum{
                     p.filenameInBucket = d2[@"filenameInBucket"];
                     p.extension = d2[@"extension"];
                     p.bucketName = d2[@"bucketName"];
+                    p.id = d2[@"id"];
                     p.language = language;
                     p.media = media;
                     [popups addObject:p];

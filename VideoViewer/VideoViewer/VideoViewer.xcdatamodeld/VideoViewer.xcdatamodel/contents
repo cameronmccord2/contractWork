@@ -44,6 +44,7 @@
         <attribute name="extension" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="filename" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="filenameInBucket" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="languageId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="mediaId" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="popupText" optional="YES" attributeType="String" syncable="YES"/>
@@ -55,6 +56,6 @@
         <element name="Captions" positionX="-54" positionY="36" width="128" height="178"/>
         <element name="Languages" positionX="-36" positionY="90" width="128" height="178"/>
         <element name="Medias" positionX="-63" positionY="-18" width="128" height="223"/>
-        <element name="Popups" positionX="-27" positionY="99" width="128" height="238"/>
+        <element name="Popups" positionX="-27" positionY="99" width="128" height="253"/>
     </elements>
 </model>

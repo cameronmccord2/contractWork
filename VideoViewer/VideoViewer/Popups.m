@@ -24,6 +24,7 @@
 @dynamic popupText;
 @dynamic startTime;
 @dynamic bucketName;
+@dynamic id;
 @dynamic language;
 @dynamic media;
 

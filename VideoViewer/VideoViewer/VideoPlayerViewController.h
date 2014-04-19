@@ -10,8 +10,9 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import "Medias.h"
 #import "VPDaoV1.h"
+#import "PopupDetailsViewController.h"
 
-@interface VideoPlayerViewController : UIViewController<VPDaoV1DelegateProtocol, NSFetchedResultsControllerDelegate>
+@interface VideoPlayerViewController : UIViewController<VPDaoV1DelegateProtocol, NSFetchedResultsControllerDelegate, PopupDetailsViewControllerDelegate>
 
 @property (nonatomic, strong) NSFetchedResultsController *fetchedResultsController;
 @property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
@@ -33,8 +34,13 @@
 @property(nonatomic, strong)UIProgressView *progressView;
 @property(nonatomic, strong)UILabel *loadingLabel;
 @property(nonatomic, weak)NSURLConnectionWithExtras *connection;
+@property(nonatomic, strong)NSMutableArray *spots;
 
 - (id)initWithContext:(NSManagedObjectContext *)context media:(Medias *)media;
 -(void)popupTapped:(id)sender;
+
+
+#pragma mark - PopupDetailsViewControllerDelegate functions
+-(void)willReturn;
 
 @end
