@@ -1,6 +1,6 @@
 angular.module('CaptionServices', [])
-// .constant("serverPath", "http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/")
-.constant("serverPath", "http://localhost:8080/salesmanBuddy/v1/salesmanbuddy/")
+.constant("serverPath", "http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/")
+// .constant("serverPath", "http://localhost:8080/salesmanBuddy/v1/salesmanbuddy/")
 .constant("languagesPath", "languages")
 .constant("mediaPath", "media")
 .constant("captionPath", "captions")
