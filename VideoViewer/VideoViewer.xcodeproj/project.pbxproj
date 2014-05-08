@@ -30,6 +30,8 @@
 		E45F41AF1901F90C009D21D7 /* sk7st079h5v4nd84623tbm74to.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = E45F419E1901F90C009D21D7 /* sk7st079h5v4nd84623tbm74to.mp3 */; };
 		E45F41B01901F90C009D21D7 /* u0gei2lv50peq2qd3ksguf09ki.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = E45F419F1901F90C009D21D7 /* u0gei2lv50peq2qd3ksguf09ki.mp4 */; };
 		E45F41B11901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = E45F41A01901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 */; };
+		E45F41C31905A7BD009D21D7 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = E45F41C11905A7BD009D21D7 /* pause.png */; };
+		E45F41C41905A7BD009D21D7 /* play.png in Resources */ = {isa = PBXBuildFile; fileRef = E45F41C21905A7BD009D21D7 /* play.png */; };
 		E4D5605118FF9A1100263AC4 /* VideoListTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5605018FF9A1100263AC4 /* VideoListTableViewController.m */; };
 		E4D5606718FFAF4D00263AC4 /* VideoPlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5606618FFAF4D00263AC4 /* VideoPlayerViewController.m */; };
 		E4D5606918FFB22300263AC4 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4D5606818FFB22300263AC4 /* MediaPlayer.framework */; };
@@ -96,6 +98,8 @@
 		E45F419E1901F90C009D21D7 /* sk7st079h5v4nd84623tbm74to.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = sk7st079h5v4nd84623tbm74to.mp3; sourceTree = "<group>"; };
 		E45F419F1901F90C009D21D7 /* u0gei2lv50peq2qd3ksguf09ki.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = u0gei2lv50peq2qd3ksguf09ki.mp4; sourceTree = "<group>"; };
 		E45F41A01901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = ufdof2ju9i5lrg00clgq1s7v56.mp4; sourceTree = "<group>"; };
+		E45F41C11905A7BD009D21D7 /* pause.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pause.png; path = "Good Images/pause.png"; sourceTree = "<group>"; };
+		E45F41C21905A7BD009D21D7 /* play.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = play.png; path = "Good Images/play.png"; sourceTree = "<group>"; };
 		E4D5604F18FF9A1100263AC4 /* VideoListTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoListTableViewController.h; sourceTree = "<group>"; };
 		E4D5605018FF9A1100263AC4 /* VideoListTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoListTableViewController.m; sourceTree = "<group>"; };
 		E4D5606518FFAF4D00263AC4 /* VideoPlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoPlayerViewController.h; sourceTree = "<group>"; };
@@ -187,6 +191,15 @@
 			name = Videos;
 			sourceTree = "<group>";
 		};
+		E45F41C01905A7A3009D21D7 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				E45F41C11905A7BD009D21D7 /* pause.png */,
+				E45F41C21905A7BD009D21D7 /* play.png */,
+			);
+			name = Images;
+			sourceTree = "<group>";
+		};
 		E4D5605818FFA81600263AC4 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -258,6 +271,7 @@
 		E4DDCFA618FF983D002688E9 /* VideoViewer */ = {
 			isa = PBXGroup;
 			children = (
+				E45F41C01905A7A3009D21D7 /* Images */,
 				E45F41811901F4DF009D21D7 /* Videos */,
 				E4D5607F18FFB3CC00263AC4 /* Extra classes */,
 				E4D5608018FFB3D800263AC4 /* Managers */,
@@ -394,6 +408,7 @@
 			files = (
 				E45F41AA1901F90C009D21D7 /* k9hj7jsp421r0534q8gbfkrt17.mp3 in Resources */,
 				E45F41AC1901F90C009D21D7 /* ohvod2am1f8eqdajv4g6kcq1il.mp4 in Resources */,
+				E45F41C31905A7BD009D21D7 /* pause.png in Resources */,
 				E4DDCFAB18FF983D002688E9 /* InfoPlist.strings in Resources */,
 				E45F41A11901F90C009D21D7 /* abvgdjpordk1dlnqe6tke4nhdv.mp3 in Resources */,
 				E45F41A41901F90C009D21D7 /* c8gs03kmo5ci4ijruki9k3qtfn.mp3 in Resources */,
@@ -405,6 +420,7 @@
 				E45F41A91901F90C009D21D7 /* j02n6fuji0hve0dfkn9cfg49hu.mp3 in Resources */,
 				E45F41AE1901F90C009D21D7 /* rgnunrgf0kjmp9qk07u3517v65.mp4 in Resources */,
 				E45F41A81901F90C009D21D7 /* ijcd3lv0grgbcbe5fah6ccafmd.mp4 in Resources */,
+				E45F41C41905A7BD009D21D7 /* play.png in Resources */,
 				E45F41A21901F90C009D21D7 /* bpkkma9v4m7ko7i1ehon7ackrp.mp3 in Resources */,
 				E45F41AF1901F90C009D21D7 /* sk7st079h5v4nd84623tbm74to.mp3 in Resources */,
 				E4DDCFB618FF983D002688E9 /* Images.xcassets in Resources */,

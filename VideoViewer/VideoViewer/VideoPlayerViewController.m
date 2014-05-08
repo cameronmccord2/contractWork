@@ -41,14 +41,15 @@
         [self.progressView setProgress:0.0f];
         self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
         
-        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-        [[NSNotificationCenter defaultCenter]
-         addObserver:self selector:@selector(orientationChanged:)
-         name:UIDeviceOrientationDidChangeNotification
-         object:[UIDevice currentDevice]];
+       
+        [self registerForOrientationChanges];
     }
     return self;
 }
+
+enum {
+    WasLandscape, WasPortrait
+};
 
 - (void)viewDidLoad{
     [super viewDidLoad];
@@ -76,6 +77,7 @@
 -(void)videoDataThen:(NSURLConnectionWithExtras *)connection progress:(NSProgress *)progress{
     if (!self.scrollView) {
         self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, [self view].frame.size.width, [self view].frame.size.height)];
+        [self.scrollView setAutoresizingMask:(UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight)];
         [self.scrollView setBackgroundColor:[UIColor whiteColor]];
         [self makeLabelWithText:@"Loading your video" x:0 y:20 width:[self screenWidth] height:30 topPad:10 view:self.scrollView backgroundColor:[UIColor redColor] alignToCenter:YES addToList:self.currentCaptionLabels fontColor:[UIColor blackColor] font:[UIFont systemFontOfSize:[UIFont systemFontSize]] sizeToFit:NO];
         [self.progressView setProgress:progress.fractionCompleted];
@@ -93,8 +95,20 @@
                                                  name:MPMoviePlayerPlaybackStateDidChangeNotification object:nil];
 }
 
+-(void)registerForOrientationChanges{
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+    
+    [[NSNotificationCenter defaultCenter]
+     addObserver:self selector:@selector(orientationChanged:)
+     name:UIDeviceOrientationDidChangeNotification
+     object:[UIDevice currentDevice]];
+}
+
 -(void)willReturn{
     [self registerForVideoPlayerNotifications];
+    [self registerForOrientationChanges];
+    if(([self isLandscape] && self.portraitOrLandscape == WasPortrait) || (![self isLandscape] && self.portraitOrLandscape == WasLandscape))
+        [self fixEverything];
 //    [self.player play];
     
 }
@@ -157,7 +171,7 @@
     
     if ([self.fetchedResultsController.fetchedObjects count]) {
         
-        NSInteger yValue = 180;// TODO change this to be the starting, whatever that may be
+        NSInteger yValue = [self getCaptionsStartingY];// TODO change this to be the starting, whatever that may be
         // clear out current lists
         [self.currentCaptions removeAllObjects];
         for (UILabel *l in self.currentCaptionLabels) {
@@ -190,18 +204,18 @@
         NSArray *currentIds = [self.currentPopups valueForKeyPath:@"@distinctUnionOfObjects.id"];
         NSArray *fetchedIds = [self.fetchedResultsController.fetchedObjects valueForKeyPath:@"@distinctUnionOfObjects.id"];
         
-        NSPredicate *toKeepPredicate = [NSPredicate predicateWithFormat:@"id IN $ids"];
-        NSArray *toKeep = [self.currentPopups filteredArrayUsingPredicate:[toKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
+//        NSPredicate *toKeepPredicate = [NSPredicate predicateWithFormat:@"id IN $ids"];
+//        NSArray *toKeep = [self.currentPopups filteredArrayUsingPredicate:[toKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
         NSPredicate *toRemoveKeepPredicate = [NSPredicate predicateWithFormat:@"NOT (id IN $ids)"];
         NSArray *toRemove = [self.currentPopups filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
         NSArray *toAdd = [self.fetchedResultsController.fetchedObjects filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": currentIds}]];
                                                                                                                                                                
-        if ([toRemove count] > 0)
-            NSLog(@"Removing %ld", (long)[toRemove count]);
-        if([toKeep count] == 0)
-            NSLog(@"removing all");
-        if([toAdd count] > 0)
-            NSLog(@"adding %ld", (long)[toAdd count]);
+//        if ([toRemove count] > 0)
+//            NSLog(@"Removing %ld", (long)[toRemove count]);
+//        if([toKeep count] == 0)
+//            NSLog(@"removing all");
+//        if([toAdd count] > 0)
+//            NSLog(@"adding %ld", (long)[toAdd count]);
         
         
         NSInteger yValue = [self popupStartingY];
@@ -248,11 +262,14 @@
 }
 
 -(void)popupTapped:(UIButton *)sender{
-    NSLog(@"tapped");
+//    NSLog(@"tapped");
     [self.player pause];
+    self.portraitOrLandscape = WasPortrait;
+    if([self isLandscape])
+        self.portraitOrLandscape = WasLandscape;
     for (Popups *p in self.currentPopups) {
         if (sender.titleLabel.text == p.displayName) {
-            NSLog(@"found: %@", p);
+//            NSLog(@"found: %@", p);
             PopupDetailsViewController *pdvc = [[PopupDetailsViewController alloc] initWithPopup:p context:self.managedObjectContext];
             [pdvc setWillReturnDelegate:self];
             [self.navigationController pushViewController:pdvc animated:YES];
@@ -312,13 +329,7 @@
         case UIDeviceOrientationPortraitUpsideDown:// move popups up or down depending on where they currently are and where they need to be when it rotates
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
-            [self.scrollView setContentSize:[self getScrollViewContentSize]];
-            [self.scrollView setFrame:[self getScrollViewFrame]];
-            [self.player.view setFrame:[self getVideoPlayerFrame]];
-            [self.scrollView setContentInset:[self getScrollViewContentInsets]];
-            [self fixScrollViewWidth];
-            [self fixCurrentPopups];
-            [self fixCurrentCaptions];
+            [self fixEverything];
             break;
             
         default:
@@ -326,17 +337,35 @@
     };
 }
 
+-(void)fixEverything{
+    [self.scrollView setContentSize:[self getScrollViewContentSize]];
+    [self.scrollView setFrame:[self getScrollViewFrame]];
+    [self.player.view setFrame:[self getVideoPlayerFrame]];
+    [self.scrollView setContentInset:[self getScrollViewContentInsets]];
+    [self fixScrollViewWidth];
+    [self fixCurrentPopups];
+    [self fixCurrentCaptions];
+}
+
+-(NSInteger)getCaptionsStartingY{
+    if([self isLandscape])
+        return 160;
+    return 200;
+}
+
 -(void)fixCurrentPopups{
-    int val = 220;
+    int val = 240;
     if(![self isLandscape])
-        val = -220;
+        val = -240;
     for (UIButton *b in self.currentPopupButtons) {
-        [b setFrame:CGRectMake(b.frame.origin.x, b.frame.origin.y - 220, b.frame.size.width, b.frame.size.height)];
+        [b setFrame:CGRectMake(b.frame.origin.x, b.frame.origin.y - val, b.frame.size.width, b.frame.size.height)];
     }
 }
 
 -(void)fixCurrentCaptions{
-    
+    for (UILabel *l in self.currentCaptionLabels) {
+        [l setFrame:CGRectMake(l.frame.origin.x, [self getCaptionsStartingY], l.frame.size.width, l.frame.size.height)];
+    }
 }
 
 -(void)fixScrollViewWidth{
@@ -352,9 +381,12 @@
 }
 
 -(CGRect)getVideoPlayerFrame{
+    NSInteger heightAdjust = 0;
+    if([self isIpad])
+        heightAdjust = 400;
     if([self isLandscape])
-        return CGRectMake(0, -30, [self screenWidth], 300);
-    return CGRectMake(0, 0, [self screenWidth], 200);
+        return CGRectMake(0, -30, [self screenWidth], 300 + heightAdjust);
+    return CGRectMake(0, 0, [self screenWidth], 200 + heightAdjust);
 }
 
 -(CGRect)getScrollViewFrame{
@@ -372,7 +404,7 @@
 -(NSInteger)popupStartingY{
     if([self isLandscape])
         return 10;
-    return 230;
+    return 250;
 }
 
 -(NSInteger)screenWidth{

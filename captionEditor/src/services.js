@@ -1,12 +1,13 @@
 angular.module('CaptionServices', [])
-.constant("serverPath", "http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/")
-// .constant("serverPath", "https://localhost/salesmanBuddy/v1/salesmanbuddy/")
+// .constant("serverPath", "http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/")
+.constant("serverPath", "http://localhost:8080/salesmanBuddy/v1/salesmanbuddy/")
 .constant("languagesPath", "languages")
 .constant("mediaPath", "media")
 .constant("captionPath", "captions")
 .constant("saveDataPath", "saveData")
 .constant("bucketsPath", "buckets")
 .constant("popupsPath", "popups")
+.constant("subPopupsPath", "subpopups")
 
 .factory('languagesFactory',function(serverPath, languagesPath, $http, $q){
 	var factory = {};
@@ -190,7 +191,7 @@ angular.module('CaptionServices', [])
 	return factory;
 })
 
-.factory('popupsFactory',function(serverPath, popupsPath, saveDataPath, $http, $q){
+.factory('popupsFactory',function(serverPath, popupsPath, subPopupsPath, saveDataPath, $http, $q){
 	var factory = {};
 
 	factory.getAllPopups = function(mediaId, languageId){
@@ -237,12 +238,29 @@ angular.module('CaptionServices', [])
 		return defer.promise;
 	}
 
-	factory.savePopup = function(base64String, popupId, contentType){
+	factory.deleteSubPopup = function(subPopupId){
 		var defer = $q.defer();
 		var options = {
 			params:{
-				popupId:popupId,
-				base64:1
+				subPopupId:subPopupId
+			}
+		};
+		$http.delete(serverPath + subPopupsPath, options).success(function(data){
+			defer.resolve(data);
+		}).error(function(data, status, headers, config){
+			console.log("delete subpopup failed, id: " + popupId, data, status, headers, config);
+			defer.reject(data);
+		});
+		return defer.promise;
+	}
+
+	factory.savePopupSubPopupFile = function(base64String, popupId, contentType, subPopupId){
+		var defer = $q.defer();
+		var options = {
+			params:{
+				popupId:popupId || null,
+				base64:1,
+				subPopupId:subPopupId || null
 			},
 			headers:{
 				"content-type":contentType

@@ -130,12 +130,12 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	// }
 
 	$scope.changePreviewToIndex = function(index){
-		console.log($scope.edit.popups[index])
+		// console.log($scope.edit.popups[index])
 		bucketsFactory.getCaptionEditorBucket().then(function(bucket){
 			$scope.audioSource = "https://s3-us-west-2.amazonaws.com/" + bucket.name + "/" + $scope.edit.popups[index].filenameInBucket;
 			$scope.popupTextPreview = $scope.edit.popups[index].text || "ERROR, couldnt find text";
 			$scope.showingPreview = true;
-			console.log($scope.popupTextPreview)
+			// console.log($scope.popupTextPreview)
 			$timeout(function(){
 				document.getElementById("previewAudioPlayer").load();
 				// document.getElementById("previewAudioPlayer").play();
@@ -296,8 +296,13 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		$scope.edit.activeEdit.push(newCaption);
 	}
 
-	$scope.addRowAtEnd = function(type){
-		if(type && type == 'popup'){
+	$scope.addRowAtEnd = function(type, popupIndex){
+		if(type && type == 'subPopup'){
+			var newSubPopup = $scope.newSubPopup();
+			$scope.edit.popups[popupIndex].subPopups.push(newSubPopup);
+			$scope.setDontChangeSettings();
+
+		}else if(type && type == 'popup'){
 			var newPopup = $scope.getNewPopupObject();
 			newPopup.showRefText = false;
 			if($scope.edit.popups[$scope.edit.popups.length-1])// there is a list already, so add and update start time to previous end time
@@ -348,19 +353,27 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}
 	}
 
-	$scope.undoRemove = function(index, type){
-		if(type && type == 'popup')
+	$scope.undoRemove = function(index, type, parentIndex){
+		if(type && type == 'subPopup')
+			$scope.edit.popups[parentIndex].subPopups[index].showSubPopup = true;
+		else if(type && type == 'popup')
 			$scope.edit.popups[index].showText = true;
 		else
 			$scope.edit.activeEdit[index].showText = true;
 		$scope.setDontChangeSettings();
 	}
 
-	$scope.addRowInMiddle = function(index, type){
-		if(type && type == 'popup'){
+	$scope.addRowInMiddle = function(index, type, parentIndex){
+		if(type && type == 'subPopup'){
+			if(index == $scope.edit.popups[parentIndex].subPopups.length-1){// just adding to the end
+				$scope.addRowAtEnd(type, parentIndex);
+			}else{
+				var newSubPopup = $scope.newSubPopup();
+				$scope.edit.popups[parentIndex].subPopups.splice(index+1, 0, newSubPopup);
+			}
+		}else if(type && type == 'popup'){
 			if(index == $scope.edit.popups.length-1){// just adding to the end
 				$scope.addRowAtEnd(type);
-				return;
 			}else{
 				var newPopup = $scope.getNewPopupObject();
 				newPopup.endtime = $scope.edit.popups[index].endtime;
@@ -375,7 +388,6 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}else{
 			if(index == $scope.edit.activeEdit.length - 1){//if row getting added at the end
 				$scope.addRowAtEnd();
-				return;
 				// newCaption.sequence = ((parseInt($scope.edit.activeEdit[index].sequence)) + 1000);
 				// $scope.edit.activeEdit.push(newCaption);
 				// $("#captionArea").scrollTop($("#captionArea")[0].scrollHeight - $("#captionArea").height());
@@ -398,8 +410,10 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		$scope.setDontChangeSettings();
 	}
 
-	$scope.removeRow = function(index, type){
-		if(type && type == 'popup')
+	$scope.removeRow = function(index, type, parentIndex){
+		if(type && type == 'subPopup')
+			$scope.edit.popups[parentIndex].subPopups[index].showSubPopup = false;
+		else if(type && type == 'popup')
 			$scope.edit.popups[index].showText = false;
 		else
 			$scope.edit.activeEdit[index].showText = false;
@@ -522,6 +536,12 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 					popup.starttime = $scope.convertLongToCaptionEditorTime(popup.startTime);
 					popup.endtime = $scope.convertLongToCaptionEditorTime(popup.endTime);
 					popup.text = popup.popupText;
+					for (var j = popup.subPopups.length - 1; j >= 0; j--) {
+						var subPopups = popup.subPopups[j];
+						subPopups.showSubPopup = true;
+						subPopups.startTime = $scope.convertLongToCaptionEditorTime(subPopups.startTime);
+						subPopups.endTime = $scope.convertLongToCaptionEditorTime(subPopups.endTime);
+					};
 				};
 				console.log($scope.edit.popups)
 			}else
@@ -824,7 +844,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		},
 		popupTextValid: function(captionsToTest, index){
 			console.log("three", captionsToTest[index])
-			if(captionsToTest[index].text.length == 0){
+			if(captionsToTest[index].subPopups.length == 0 && captionsToTest[index].text.length == 0){
 				console.log("bad")
 				$scope.showErrorOnHoverMessage = true;
 				captionsToTest[index].textError = $rootScope.flags.invalid;
@@ -1217,6 +1237,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	}
 
 	$scope.submitCaptions = function(){
+		console.log($scope.edit.popups);
 		$scope.saveMessage = "";
 		if($scope.edit.activeEdit != undefined && $scope.edit.popups != undefined){
 			if($scope.testCaptionsForSubmission($scope.edit.activeEdit) || $scope.testPopupsForSubmission($scope.edit.popups)){
@@ -1275,10 +1296,31 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 							popupText: popup.text,
 							mediaId: popup.mediaId,
 							languageId: languageId,
-							filename: popup.filename
+							filename: popup.filename,
+							subPopups:[]
 						};
 						if(popup.file)
 							tempPopup.filename = popup.file.filename;
+						for (var j = popup.subPopups.length - 1; j >= 0; j--) {
+							var subPopup = popup.subPopups[j];
+							console.log(subPopup)
+							if(subPopup.showSubPopup){
+								var tempSubPopup = {
+									id:subPopup.id || 0,
+									startTime: $scope.convertCaptionEditorTimeToLong(subPopup.startTime),
+									endTime: $scope.convertCaptionEditorTimeToLong(subPopup.endTime),
+									popupText:subPopup.popupText,
+									popupId:subPopup.popupId || popup.id || 0,
+									assetPosition:subPopup.assetPosition,
+									filename:subPopup.filename
+								};
+								if(subPopup.file)
+									tempSubPopup.filename = subPopup.file.filename;
+							}else if(subPopup.id != undefined && subPopup.id != 0)
+								popupsFactory.deleteSubPopup(subPopup.id);
+
+							tempPopup.subPopups.push(tempSubPopup);
+						};
 						$scope.finalPopups.push(tempPopup);
 
 					}else if(popup.id != undefined && popup.id != 0)
@@ -1328,7 +1370,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 								newPopup.startTime == $scope.convertCaptionEditorTimeToLong(popup.starttime) &&
 								newPopup.endTime == $scope.convertCaptionEditorTimeToLong(popup.endtime) &&
 								newPopup.displayName == popup.displayName &&
-								newPopup.popupText == popup.text){
+								newPopup.popupText == popup.text){// get the popups from each list that match
 
 								popup.id = newPopup.id;
 
@@ -1336,6 +1378,10 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 									$scope.filesNeedToUpload++;
 									$scope.uploadFileForPopup(popup, newPopup.id, uploadFilesDefer);
 								}
+
+								// go through subpopups to upload files
+								$scope.uploadFilesForSubPopups(popup, newPopup, uploadFilesDefer);
+								break;
 							}
 						};
 					};
@@ -1346,8 +1392,48 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}	
 	}
 
+	$scope.uploadFilesForSubPopups = function(oldPopup, newPopupFromServer, uploadFilesDefer){
+		console.log(oldPopup, newPopupFromServer, uploadFilesDefer)
+		for (var i = oldPopup.subPopups.length - 1; i >= 0; i--) {
+			var oldSub = oldPopup.subPopups[i];
+			for (var j = newPopupFromServer.subPopups.length - 1; j >= 0; j--) {
+				var newSub = newPopupFromServer.subPopups[j];
+				console.log(i, newSub.popupText, oldSub.popupText, $scope.convertCaptionEditorTimeToLong(oldSub.startTime) == newSub.startTime ,
+					$scope.convertCaptionEditorTimeToLong(oldSub.endTime) == newSub.endTime ,
+					oldSub.popupText == newSub.popupText ,					oldSub.assetPosition == newSub.assetPosition, oldSub.assetPosition, newSub.assetPosition);
+				if($scope.convertCaptionEditorTimeToLong(oldSub.startTime) == newSub.startTime &&
+					$scope.convertCaptionEditorTimeToLong(oldSub.endTime) == newSub.endTime &&
+					oldSub.popupText == newSub.popupText &&
+					oldSub.assetPosition == newSub.assetPosition){
+
+					oldSub.id = newSub.id;
+					console.log(oldSub)
+					if(oldSub.file){
+						$scope.filesNeedToUpload++;
+						console.log(oldSub)
+						$scope.uploadFileForSubPopup(oldSub, newSub.id, uploadFilesDefer);
+					}
+				}
+			};
+		};
+	}
+
+	$scope.uploadFileForSubPopup = function(subPopup, id, defer){
+		console.log(subPopup, id)
+		popupsFactory.savePopupSubPopupFile(subPopup.file.base64Data, null, subPopup.file.contentType, id).then(function(data){
+			subPopup.filenameInBucket = data;
+			$scope.filesUploaded++;
+			if($scope.filesUploaded == $scope.filesNeedToUpload)
+				defer.resolve();
+		}, function(data){
+			alert("error uploading file connected to subpopup: " + subPopup.popupText + ", the rest of the subPopup was saved except for the file. Please reload the page and try to upload the file again");
+			$scope.saveMessage = "Error";
+			console.log("error", id, data);
+		});
+	}
+
 	$scope.uploadFileForPopup = function(popup, id, defer){
-		popupsFactory.savePopup(popup.file.base64Data, id, popup.file.contentType).then(function(data){
+		popupsFactory.savePopupSubPopupFile(popup.file.base64Data, id, popup.file.contentType, null).then(function(data){
 
 			popup.filenameInBucket = data;
 			$scope.filesUploaded++;
@@ -1732,6 +1818,114 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}
 		return String($scope.addLeadingZeros(hours, 2) + ":" + $scope.addLeadingZeros(minutes, 2) + ":" + $scope.addLeadingZeros(seconds, 2) + "." + $scope.addLeadingZeros(frames, 2));
 	}
+
+	// new subPopup stuff
+
+	$scope.addSubPopupToPopup = function(index, popup){
+		var popup = $scope.edit.popups[index];
+		popup.subPopups = [];
+		popup.subPopups.push($scope.newSubPopup(popup.id));
+	}
+
+	$scope.newSubPopup = function(popupId){
+		var subPopup = {
+			startTime:"",
+			endTime:"",
+			popupText:"",
+			popupId:popupId,
+			assetPosition:0,
+			filename:"",
+			bucketId:0,
+			id:0,
+			extension:"",
+			filenameInBucket:"",
+			showSubPopup:true
+		}
+		return subPopup;
+	}
+
+	$scope.upArrowSub = function(index, startOrEnd, type, popupIndex){// true start, false end
+		var editType = '';
+		var subEditType = "";
+		if(type && type == 'subPopup'){
+			editType = 'popups';
+			subEditType = 'subPopups';
+		}
+
+		if(startOrEnd == undefined)
+			return;
+		if(startOrEnd){
+			if($scope.edit[editType][popupIndex][subEditType][index].startTime == ''){// insead of incrementing an empty field, take the time from the previous row's end
+				if($scope.edit[editType][popupIndex][subEditType][index-1] && $scope.edit[editType][popupIndex][subEditType][index-1].endTime != undefined && $scope.edit[editType][popupIndex][subEditType][index - 1].endTime != '')
+					$scope.edit[editType][popupIndex][subEditType][index].startTime = $scope.correctTheTimeGreaterThan($scope.edit[editType][popupIndex][subEditType][index - 1].endTime, 0, "seconds");
+				else
+					$scope.edit[editType][popupIndex][subEditType][index].startTime = $scope.convertLongToCaptionEditorTime(0);
+			}else
+				$scope.edit[editType][popupIndex][subEditType][index].startTime = $scope.correctTheTimeGreaterThan($scope.edit[editType][popupIndex][subEditType][index].startTime, 1, "seconds");
+			// $scope.videoToThisTime($scope.edit[editType][popupIndex][subEditType][index].startTime);
+		}else{
+			if($scope.edit[editType][popupIndex][subEditType][index].endTime == ''){// instead of incrementing an empty field, take the start time of this row
+				if($scope.edit[editType][popupIndex][subEditType][index] && $scope.edit[editType][popupIndex][subEditType][index].startTime != undefined && $scope.edit[editType][popupIndex][subEditType][index].startTime != '')
+					$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeGreaterThan($scope.edit[editType][popupIndex][subEditType][index].startTime, 0, "seconds");
+				else
+					$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeGreaterThan($scope.convertLongToCaptionEditorTime(0), 1, "seconds");
+			}else
+				$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeGreaterThan($scope.edit[editType][popupIndex][subEditType][index].endTime, 1, "seconds");
+			// $scope.videoToThisTime($scope.edit[editType][popupIndex][subEditType][index].endTime);
+		}
+		
+	}
+
+	// Minuses one second from the time per down arrow press
+	$scope.downArrowSub = function(index, startOrEnd, type, popupIndex){// true start, false end
+		var editType = '';
+		var subEditType = "";
+		if(type && type == 'subPopup'){
+			editType = 'popups';
+			subEditType = 'subPopups';
+		}
+
+		if(startOrEnd == undefined)
+			return;
+		if(startOrEnd){
+			if($scope.edit[editType][popupIndex][subEditType][index].startTime != undefined && $scope.edit[editType][popupIndex][subEditType][index].startTime != ''){
+				$scope.edit[editType][popupIndex][subEditType][index].startTime = $scope.correctTheTimeLessThan($scope.edit[editType][popupIndex][subEditType][index].startTime, 1, "seconds");
+				// $scope.videoToThisTime($scope.edit[editType][popupIndex][subEditType][index].startTime);
+			}else
+				$scope.edit[editType][popupIndex][subEditType][index].startTime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
+		}else{
+			if($scope.edit[editType][popupIndex][subEditType][index].endTime != undefined && $scope.edit[editType][popupIndex][subEditType][index].endTime != '')
+				$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeLessThan($scope.edit[editType][popupIndex][subEditType][index].endTime, 1, "seconds");
+			else{
+				if($scope.edit[editType][popupIndex][subEditType][index].startTime != undefined && $scope.edit[editType][popupIndex][subEditType][index].startTime != ''){
+					$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeLessThan($scope.edit[editType][popupIndex][subEditType][index].startTime, 0, "seconds");
+					// $scope.videoToThisTime($scope.edit[editType][popupIndex][subEditType][index].endTime);
+				}else
+					$scope.edit[editType][popupIndex][subEditType][index].endTime = $scope.correctTheTimeLessThan($scope.convertLongToCaptionEditorTime(0), 0, "seconds");
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //https://s3-us-west-2.amazonaws.com/captioneditor-uuid-f6f6be1d-3c04-4c1c-82e1-ec58fce68747/ph7j39l09amcebpjsqbc61v91o
 	mediaFactory.getMediaById($routeParams.videoId).then(function(data){

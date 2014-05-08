@@ -29,6 +29,8 @@
 @property(nonatomic, strong)UILabel *descriptionLabel;
 @property(nonatomic, strong)NSData *fileData;
 @property(nonatomic, weak)id<PopupDetailsViewControllerDelegate> delegate;
+@property(nonatomic, strong)UIView *sliderBackground;
+@property(nonatomic, strong)UIButton *playPauseButton;
 
 -(instancetype)initWithPopup:(Popups *)popup context:(NSManagedObjectContext *)context;
 -(void)setWillReturnDelegate:(id<PopupDetailsViewControllerDelegate>)delegate;

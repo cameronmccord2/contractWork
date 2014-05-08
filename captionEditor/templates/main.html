@@ -65,15 +65,31 @@
 
 					<input type="text" name="popup{{$index}}" ng-model="popup.displayName" placeholder="Display Name" class="mCaptionWithReferenceLong" maxlength="30" ng-show="popup.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'displayName', 'popup')" title="{{popup.textErrorMessage}}" style="width:100px">
 
-					<input type="text" name="popup{{$index}}" ng-model="popup.text" placeholder="Popup Text" class="mCaptionWithReferenceLong" maxlength="4000" ng-show="popup.showText" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'popup', 'popup')" title="{{popup.textErrorMessage}}" on-tab="tabInCaptionField($index, 'popup')">
+					<input type="text" name="popup{{$index}}" ng-model="popup.text" placeholder="Popup Text" class="mCaptionWithReferenceLong" maxlength="4000" ng-show="popup.showText && (!popup.subPopups.length)" ng-change="setDontChangeSettings()" ng-class="checkIfInError($index, 'popup', 'popup')" title="{{popup.textErrorMessage}}" on-tab="tabInCaptionField($index, 'popup')" style="width:440px">
 					
 					<!-- from here down should be good -->
+					<button ng-hide="popup.subPopups.length" ng-click="addSubPopupToPopup($index, popup)" style="float:left">SubPopup</button>
 					<img ng-click="addRowInMiddle($index, 'popup')" class="mAddButton" src="assets/btnAdd.png" onmousedown="this.src='assets/btnAddActive.png'" onmouseup="this.src='assets/btnAdd.png'" onmouseout="this.src='assets/btnAdd.png'" ng-show="showAddRemove(popup.showText)" title="Add new row after this row">
 					<img ng-click="removeRow($index, 'popup')" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(popup.showText)" title="Remove this row">
 					<img ng-click="undoRemove($index, 'popup')" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!popup.showText)" title="Undo row removal">
-					<button ng-click="changePreviewToIndex($index)" ng-show="popup.showText" style="float:left" ng-show="showAddRemove(popup.showText)" title="Changes the preview to the left to this row, audio will only work that has been uploaded to the server" ng-show="popup.showText">Preview</button>
+					<div style="clear:left"></div>
+					<button disabled="true" ng-click="changePreviewToIndex($index)" ng-show="popup.showText" style="float:left" ng-show="showAddRemove(popup.showText)" title="Changes the preview to the left to this row, audio will only work that has been uploaded to the server" ng-show="popup.showText">Preview</button>
 					<input type="file" style="float:left" ng-show="popup.showText" ng-model="popup.file" accept="audio/mpeg" app-filereader ng-change="selectedFile(newMedia)"/>
-					<div style="float:left" ng-show="popup.showText">Filename: {{popup.filename || popup.file.filename || 'None'}}</div>
+					<div style="float:left" ng-show="popup.showText">Audio Filename: {{popup.filename || popup.file.filename || 'None'}}</div>
+				</div>
+				<div ng-repeat="subPopup in popup.subPopups" ng-show="popup.showText">
+		<!-- upArrow, downArrow, addRowInMiddle, addRowAtEnd, removeRow, undoRemove, showAddRemove-->
+					<div class="mCaptionRow" style="margin-left:61px">
+						<input type="text" ng-model="subPopup.startTime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-up-arrow="upArrowSub($index, true, 'subPopup', $parent.$index)" on-down-arrow="downArrowSub($index, true, 'subPopup', $parent.$index)" ng-change="setDontChangeSettings()" ng-show="subPopup.showSubPopup">
+						<input type="text" ng-model="subPopup.endTime" placeholder="00:00:00.00" class="mTimeField" maxlength="11" on-up-arrow="upArrowSub($index, false, 'subPopup', $parent.$index)" on-down-arrow="downArrowSub($index, false, 'subPopup', $parent.$index)" ng-change="setDontChangeSettings()" ng-show="subPopup.showSubPopup">
+						<input type="text" ng-model="subPopup.popupText" placeholder="SubPopup Text" class="mCaptionWithReferenceLong" maxlength="4000" ng-show="subPopup.showSubPopup" ng-change="setDontChangeSettings()">
+						<img ng-click="addRowInMiddle($index, 'subPopup', $parent.$index)" class="mAddButton" src="assets/btnAdd.png" onmousedown="this.src='assets/btnAddActive.png'" onmouseup="this.src='assets/btnAdd.png'" onmouseout="this.src='assets/btnAdd.png'" ng-show="showAddRemove(subPopup.showSubPopup)" title="Add new SubPopup after this row">
+						<img ng-click="removeRow($index, 'subPopup', $parent.$index)" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(subPopup.showSubPopup)" title="Remove this row">
+						<img ng-click="undoRemove($index, 'subPopup', $parent.$index)" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!subPopup.showSubPopup)" title="Undo row removal" style="margin-right:45px">
+						
+						<input type="file" style="float:left" ng-show="subPopup.showSubPopup" ng-model="subPopup.file" accept="image/png" app-filereader ng-change="selectedFile(newMedia)"/>
+						<div style="float:left" ng-show="popup.showText">Asset Filename: {{subPopup.filename || subPopup.file.filename || 'None'}}</div>
+					</div>
 				</div>
 			</div>
 			</form>

@@ -14,7 +14,7 @@
 @interface CallQueue : NSObject
 
 @property(nonatomic)BOOL alreadySent;
-@property(nonatomic, strong)id<DAOManagerDelegateProtocol> delegate;
+@property(nonatomic, weak)id<DAOManagerDelegateProtocol> delegate;
 @property(nonatomic, strong)NSMutableURLRequest *request;
 //@property(nonatomic, strong)NSData *body;
 @property(nonatomic, copy)void (^success)(NSData *, void(^)());

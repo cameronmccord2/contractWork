@@ -62,36 +62,51 @@
         if(error)
             NSLog(@"avaudioplayer had an error: %@", [error localizedDescription]);
         [self.player play];
-        self.popup.popupText = [NSString stringWithFormat:@"%@%@%@%@%@%@", self.popup.popupText,self.popup.popupText,self.popup.popupText,self.popup.popupText,self.popup.popupText,self.popup.popupText];
     }
     
-    NSInteger yValue = 62;
-    self.scrollView = [[UIScrollView alloc] initWithFrame:[self getScrollViewFrame]];
-    [self.scrollView setContentSize:[self getScrollViewContentSize]];
-    [self.scrollView setBackgroundColor:[UIColor whiteColor]];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
+    self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:self.popup.popupText]];
+    [self.descriptionLabel setNumberOfLines:0];
+    
+//    [self.descriptionLabel sizeToFit];
+    
+    [self.descriptionLabel setFrame:CGRectMake(10, 66, self.descriptionLabel.frame.size.width - 20, self.descriptionLabel.frame.size.height + 30)];
+    NSLog(@"%f %f %f %f", self.descriptionLabel.frame.origin.x, self.descriptionLabel.frame.origin.y, self.descriptionLabel.frame.size.width, self.descriptionLabel.frame.size.height);
+    
+    [self.descriptionLabel setAttributedText:[self getAttributedStringForText:self.popup.popupText]];
+    NSLog(@"text y: %ld", (long)self.descriptionLabel.frame.origin.y);
+    [self.view addSubview:self.descriptionLabel];
+    
+    
+    self.sliderTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updateSlider) userInfo:nil repeats:YES];
+    
     self.slider = [[UISlider alloc] initWithFrame:[self getSliderFrame]];
     self.slider.minimumValue = 0;
     self.slider.maximumValue = self.player.duration;
     [self.slider addTarget:self action:@selector(seekTime:) forControlEvents:UIControlEventValueChanged];
     
-    // put title above?
-    CGRect labelFrame = [self getLabelFrameForText:[self.popup popupText]];
-    NSInteger finalWidth = labelFrame.size.width - (labelFrame.size.width * 0.1f);
-    NSInteger leftPad = (labelFrame.size.width * 0.1f) / 2;
-    labelFrame = CGRectMake(leftPad, 20, finalWidth, labelFrame.size.height);
-    yValue += labelFrame.size.height;
-    self.descriptionLabel = [[UILabel alloc] initWithFrame:labelFrame];
-    [self.descriptionLabel setNumberOfLines:0];
-    [self.descriptionLabel setAttributedText:[self getAttributedStringForText:self.popup.popupText]];
-    [self.scrollView addSubview:self.descriptionLabel];
+    self.playPauseButton = [[UIButton alloc] initWithFrame:CGRectMake(60, 5, 30, 30)];
+    [self.playPauseButton setImage:[UIImage imageNamed:@"pause.png"] forState:UIControlStateNormal];
+    [self.playPauseButton addTarget:self action:@selector(playPauseButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     
-    self.sliderTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updateSlider) userInfo:nil repeats:YES];
-    if (yValue > self.scrollView.contentSize.height)
-        [self.scrollView setContentSize:CGSizeMake(self.scrollView.contentSize.width, yValue)];
+    self.sliderBackground = [[UIView alloc] initWithFrame:[self getSliderBackgroundFrame]];
+    NSLog(@"y: %f", self.sliderBackground.frame.origin.y);
+    [self.sliderBackground setBackgroundColor:[UIColor whiteColor]];
     
-    [self.view addSubview:self.scrollView];
-    [self.view addSubview:self.slider];
+    [self.sliderBackground addSubview:self.playPauseButton];
+    [self.sliderBackground addSubview:self.slider];
+    [self.view addSubview:self.sliderBackground];
+}
+
+-(void)playPauseButtonTapped:(UIButton *)sender{
+    if([self.player isPlaying]){
+        [self.player pause];
+        [self.playPauseButton setImage:[UIImage imageNamed:@"play.png"] forState:UIControlStateNormal];
+    }else{
+        [self.player play];
+        [self.playPauseButton setImage:[UIImage imageNamed:@"pause.png"] forState:UIControlStateNormal];
+    }
 }
 
 -(NSAttributedString *)getAttributedStringForText:(NSString *)text{
@@ -107,6 +122,10 @@
 }
 
 - (void) orientationChanged:(NSNotification *)note{
+    NSLog(@"fixing");
+    [self fixSliderBackground];
+    [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText]];
+    [self.descriptionLabel setFrame:CGRectMake(10, 66, self.descriptionLabel.frame.size.width - 20, self.descriptionLabel.frame.size.height + 30)];
     //    NSLog(@"new thing");
 //    UIDevice * device = note.object;
 //    switch(device.orientation){
@@ -126,13 +145,17 @@
 //        default:
 //            break;
 //    };
-    [self buildView];
+//    [self buildView];
 }
 
 -(void)fixScrollViewWidth{
     if (self.scrollView.frame.size.width < [self view].frame.size.width) {
         [self.scrollView setFrame:CGRectMake(self.scrollView.frame.origin.x, self.scrollView.frame.origin.y, [self view].frame.size.width, self.scrollView.frame.size.height)];
     }
+}
+
+-(void)fixSliderBackground{
+    [self.sliderBackground setFrame:[self getSliderBackgroundFrame]];
 }
 
 -(UIEdgeInsets)getScrollViewContentInsets{
@@ -153,11 +176,18 @@
     return [UIScreen mainScreen].bounds.size.height;
 }
 
+-(CGRect)getSliderBackgroundFrame{
+    int height = 40;
+    if([self isLandscape])
+        return CGRectMake(0, [self screenHeight] - height, [self screenWidth], height);
+    return CGRectMake(0, [self screenHeight] - height, [self screenWidth], height);
+}
+
 -(CGRect)getScrollViewFrame{
     NSInteger adjustment = 62;
     if([self isLandscape])
-        return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - adjustment);
-    return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - adjustment);
+        return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - 40);
+    return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - 40);
 }
 
 -(CGSize)getScrollViewContentSize{
@@ -168,13 +198,10 @@
                        
 -(CGRect)getSliderFrame{// 20 up from the bottom of the view
     NSInteger height = 20;
-    NSInteger bottomPad = 20;
-    NSInteger y = [self view].frame.size.height - height - bottomPad;
-    NSInteger leftPad = 20;
+    NSInteger yValue = 10;
+    NSInteger leftPad = 100;
     NSInteger width = ([self view].frame.size.width - leftPad) / 2.0f;
-    if([self isLandscape])
-        return CGRectMake(leftPad, y, width, height);
-    return CGRectMake(leftPad, y, width, height);
+    return CGRectMake(leftPad, yValue, width, height);
 }
 
 -(BOOL)isLandscape{

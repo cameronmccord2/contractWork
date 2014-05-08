@@ -35,6 +35,7 @@
 @property(nonatomic, strong)UILabel *loadingLabel;
 @property(nonatomic, weak)NSURLConnectionWithExtras *connection;
 @property(nonatomic, strong)NSMutableArray *spots;
+@property(nonatomic)NSInteger portraitOrLandscape;
 
 - (id)initWithContext:(NSManagedObjectContext *)context media:(Medias *)media;
 -(void)popupTapped:(id)sender;
