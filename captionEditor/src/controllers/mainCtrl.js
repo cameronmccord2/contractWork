@@ -2,7 +2,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 
 	$scope.loading = true;
 	$scope.validFileSelected = false;
-
+	console.log = function(){};
 	$scope.edit = new Object();
 	$scope.edit.clickToSeek = 'on';//default for click to seek
 	$scope.edit.showTestResults = 'yes';//default for show test results
