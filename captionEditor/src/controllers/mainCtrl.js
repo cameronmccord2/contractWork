@@ -1376,7 +1376,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 
 								if(popup.file){
 									$scope.filesNeedToUpload++;
-									$scope.uploadFileForPopup(popup, newPopup.id, uploadFilesDefer);
+									$scope.uploadFileForPopup(popup, newPopup.id, uploadFilesDefer, popup.file.filename);
 								}
 
 								// go through subpopups to upload files
@@ -1411,20 +1411,25 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 					if(oldSub.file){
 						$scope.filesNeedToUpload++;
 						console.log(oldSub)
-						$scope.uploadFileForSubPopup(oldSub, newSub.id, uploadFilesDefer);
+						$scope.uploadFileForSubPopup(oldSub, newSub.id, uploadFilesDefer, oldSub.file.filename);
 					}
 				}
 			};
 		};
 	}
 
-	$scope.uploadFileForSubPopup = function(subPopup, id, defer){
+	$scope.uploadFileForSubPopup = function(subPopup, id, defer, newFilename){
 		console.log(subPopup, id)
 		popupsFactory.savePopupSubPopupFile(subPopup.file.base64Data, null, subPopup.file.contentType, id).then(function(data){
 			subPopup.filenameInBucket = data;
+			subPopup.bucketId = 1;
+			subPopup.file = null;
+			subPopup.filename = newFilename;
 			$scope.filesUploaded++;
-			if($scope.filesUploaded == $scope.filesNeedToUpload)
+			if($scope.filesUploaded == $scope.filesNeedToUpload){
+				console.log($scope.edit.popups)
 				defer.resolve();
+			}
 		}, function(data){
 			alert("error uploading file connected to subpopup: " + subPopup.popupText + ", the rest of the subPopup was saved except for the file. Please reload the page and try to upload the file again");
 			$scope.saveMessage = "Error";
@@ -1432,10 +1437,13 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		});
 	}
 
-	$scope.uploadFileForPopup = function(popup, id, defer){
+	$scope.uploadFileForPopup = function(popup, id, defer, newFilename){
 		popupsFactory.savePopupSubPopupFile(popup.file.base64Data, id, popup.file.contentType, null).then(function(data){
 
 			popup.filenameInBucket = data;
+			popup.bucketId = 1;
+			popup.file = null;
+			popup.filename = newFilename;
 			$scope.filesUploaded++;
 			if($scope.filesUploaded == $scope.filesNeedToUpload)
 				defer.resolve();
