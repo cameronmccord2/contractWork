@@ -41,11 +41,61 @@
 	cursor: pointer;
 }
 
-
+.popupPreviewModal .iPhonePortrait{
+	width:320px;
+	height:480px;
+	border: 1px solid blue;
+	float:left;
+}
+.popupPreviewModal .iPhoneLandscape{
+	width:480px;
+	height:320px;
+	border: 1px solid green;
+	float:left;
+}
+.popupPreviewModal .iPad{
+	width:768px;
+	height:768px;
+	border: 1px solid orange;
+	float:left;
+}
+.iPhonePortrait .subPopupText{
+	width:320px;
+	height:240px;
+	float:left;
+}
+.iPhoneLandscape .subPopupText{
+	width:240px;
+	height:320px;
+	float:left;
+}
+.iPad .subPopupText{
+	width:384px;
+	height:384px;
+	float:left;
+}
+.iPhonePortrait .subPopupImage{
+	width:240px;
+	height:240px;
+	float:left;
+	margin-left: 40px;
+}
+.iPhoneLandscape .subPopupImage{
+	width:240px;
+	height:240px;
+	float:left;
+	margin-top: 40px;
+}
+.iPad .subPopupImage{
+	width:384px;
+	height:384px;
+	float:left;
+	margin-top: 20px;
+}
 .popupPreviewModal{
-	width: 500px;
+	width: 810px;
 	position: absolute;
-	height: 500px;
+	height: 1300px;
 	z-index: 100;
 	background-color: white;
 	border: 1px solid;
@@ -86,6 +136,7 @@
 	background-color: #F5F5F5;
 	border: 1px solid #e3e3e3;
 	border-radius: 5px;
+	margin-bottom: 40px;
 }
 .mBottom1{
 	float:left;

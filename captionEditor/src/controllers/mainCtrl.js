@@ -132,13 +132,17 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 	$scope.changePreviewToIndex = function(index){
 		// console.log($scope.edit.popups[index])
 		bucketsFactory.getCaptionEditorBucket().then(function(bucket){
+			$scope.captionEditorBucket = bucket;
 			$scope.audioSource = "https://s3-us-west-2.amazonaws.com/" + bucket.name + "/" + $scope.edit.popups[index].filenameInBucket;
-			$scope.popupTextPreview = $scope.edit.popups[index].text || "ERROR, couldnt find text";
 			$scope.showingPreview = true;
+			$scope.popupPreviewIndex = index;
 			// console.log($scope.popupTextPreview)
 			$timeout(function(){
-				document.getElementById("previewAudioPlayer").load();
-				// document.getElementById("previewAudioPlayer").play();
+				$scope.audioCommand("load");
+				if($scope.edit.popups[index].subPopups.length > 0)
+					$scope.audioCommand("addTimeUpdate", $scope.showSubPopupForTime);
+				else
+					$scope.popupTextPreview = $scope.edit.popups[index].text || "ERROR, couldnt find text";
 			}, 1000);
 		});
 	}
@@ -147,6 +151,28 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		if($scope.captionShowing){
 			return $scope.captionShowing.typeObject.class;
 		}
+	}
+
+	$scope.showSubPopupForTime = function(time){
+		$scope.$apply(function(){
+			time = time * 1000;
+			if(!$scope.edit.activeEdit)// need?
+				return;
+			for (var i = $scope.edit.popups[$scope.popupPreviewIndex].subPopups.length - 1; i >= 0; i--) {
+				var subPopup = $scope.edit.popups[$scope.popupPreviewIndex].subPopups[i];
+				if($scope.convertCaptionEditorTimeToLong(subPopup.startTime) < time && time < $scope.convertCaptionEditorTimeToLong(subPopup.endTime)){
+					subPopup.imageUrl = "";
+					console.log(subPopup)
+					if(subPopup.filenameInBucket && subPopup.filenameInBucket.length > 0)
+						subPopup.imageUrl = "https://s3-us-west-2.amazonaws.com/" + $scope.captionEditorBucket.name + "/" + subPopup.filenameInBucket;
+					else
+						subPopup.imageUrl = "";
+					$scope.subPopupShowing = subPopup;
+					break;
+				}else
+					$scope.subPopupShowing = null;
+			};
+		});
 	}
 
 	$scope.showSubtitleForTime = function(time){
@@ -491,6 +517,17 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		// }
 		// if(what == "setup")
 		// 	_V_("mainVideo",{ "controls":true, "autoplay":false, "preload":"true", "playerFallbackOrder": ["flash", "html5", "links"] }, function(){});
+	}
+
+	$scope.audioCommand = function(what, element){
+		var audioElement = document.getElementById('previewAudioPlayer');
+		if(what == 'addTimeUpdate'){
+			audioElement.addEventListener("timeupdate", function(){
+				element(audioElement.currentTime);
+			}, false);
+		}else if(what == 'load'){
+			audioElement.load();
+		}
 	}
 
 	$scope.changedEditMode = function(newMode){// rebuild the view and controller instead of trying to clear everything manually

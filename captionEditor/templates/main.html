@@ -73,7 +73,7 @@
 					<img ng-click="removeRow($index, 'popup')" class="mRemoveButton" src="assets/btnRemove.png" onmousedown="this.src='assets/btnRemoveActive.png'" onmouseup="this.src='assets/btnRemove.png'" onmouseout="this.src='assets/btnRemove.png'" ng-show="showAddRemove(popup.showText)" title="Remove this row">
 					<img ng-click="undoRemove($index, 'popup')" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!popup.showText)" title="Undo row removal">
 					<div style="clear:left"></div>
-					<button disabled="true" ng-click="changePreviewToIndex($index)" ng-show="popup.showText" style="float:left" ng-show="showAddRemove(popup.showText)" title="Changes the preview to the left to this row, audio will only work that has been uploaded to the server" ng-show="popup.showText">Preview</button>
+					<button ng-click="changePreviewToIndex($index)" style="float:left" ng-show="showAddRemove(popup.showText)" title="Changes the preview to the left to this row, audio will only work that has been uploaded to the server" ng-show="popup.showText">Preview</button>
 					<input type="file" style="float:left" ng-show="popup.showText" ng-model="popup.file" accept="audio/mpeg" app-filereader ng-change="selectedFile(newMedia)"/>
 					<div style="float:left" ng-show="popup.showText">Audio Filename: {{popup.filename || popup.file.filename || 'None'}}</div>
 				</div>
@@ -97,11 +97,28 @@
 		</div>
 	</div>
 	<div ng-show="showingPreview" class="popupPreviewModal">
-		<button ng-click="showingPreview = false" style="float:right">Close</button>
-		<div style="min-height:50px; width:400px; margin:20px;" ng-bind-html="popupTextPreview"></div>
-		<audio id="previewAudioPlayer" controls>
+		<audio id="previewAudioPlayer" controls style="float:left">
 			<source type="audio/mpeg" ng-src="{{audioSource}}">
 		</audio>
+		<button ng-click="showingPreview = false" style="float:right">Close</button>
+		<div style="clear:left"></div>
+		<div style="min-height:50px; width:400px; margin:20px;"ng-show="edit.popups[popupPreviewIndex].subPopups.length == 0" ng-bind-html="popupTextPreview"></div>
+		<div ng-show="edit.popups[popupPreviewIndex].subPopups.length">
+			<div class="iPhonePortrait">
+				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+			</div>
+			<div class="iPhoneLandscape">
+				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+			</div>
+			<div style="clear:left"></div>
+			<div class="iPad">
+				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+			</div>
+		</div>
+		
 	</div>
 
 
