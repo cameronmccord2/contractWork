@@ -8,6 +8,7 @@
 
 #import "PopupDetailsViewController.h"
 #import "Popups.h"
+#import "SubPopups.h"
 
 @interface PopupDetailsViewController ()
 // TODO add play button
@@ -22,10 +23,15 @@
         self.managedObjectContext = context;
         self.automaticallyAdjustsScrollViewInsets = NO;
         [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-        [[NSNotificationCenter defaultCenter]
-         addObserver:self selector:@selector(orientationChanged:)
-         name:UIDeviceOrientationDidChangeNotification
-         object:[UIDevice currentDevice]];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(orientationChanged:)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:[UIDevice currentDevice]];
+        
+        // Core Data init stuff
+        NSString *predicateString = [NSString stringWithFormat:@"(popupId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.popup.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
+        self.predicate = [NSPredicate predicateWithFormat:predicateString];
+        self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
     }
     return self;
 }
@@ -64,21 +70,14 @@
         [self.player play];
     }
     
+    self.scrollView = [[UIScrollView alloc] initWithFrame:[self getScrollViewFrame]];
+    [self.scrollView setBackgroundColor:[UIColor whiteColor]];
+    
+    [self.view addSubview:self.scrollView];
+    
     [self.view setBackgroundColor:[UIColor whiteColor]];
-    self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:self.popup.popupText]];
-    [self.descriptionLabel setNumberOfLines:0];
     
-//    [self.descriptionLabel sizeToFit];
-    
-    [self.descriptionLabel setFrame:CGRectMake(10, 66, self.descriptionLabel.frame.size.width - 20, self.descriptionLabel.frame.size.height + 30)];
-    NSLog(@"%f %f %f %f", self.descriptionLabel.frame.origin.x, self.descriptionLabel.frame.origin.y, self.descriptionLabel.frame.size.width, self.descriptionLabel.frame.size.height);
-    
-    [self.descriptionLabel setAttributedText:[self getAttributedStringForText:self.popup.popupText]];
-    NSLog(@"text y: %ld", (long)self.descriptionLabel.frame.origin.y);
-    [self.view addSubview:self.descriptionLabel];
-    
-    
-    self.sliderTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updateSlider) userInfo:nil repeats:YES];
+    self.sliderTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(updatePlayerTime) userInfo:nil repeats:YES];
     
     self.slider = [[UISlider alloc] initWithFrame:[self getSliderFrame]];
     self.slider.minimumValue = 0;
@@ -186,8 +185,8 @@
 -(CGRect)getScrollViewFrame{
     NSInteger adjustment = 62;
     if([self isLandscape])
-        return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - 40);
-    return CGRectMake(0, adjustment, [self view].frame.size.width, [self view].frame.size.height - 40);
+        return CGRectMake(0, adjustment, [self screenHeight] / 2, [self screenWidth] - 20);// split the slider background height, half here, half image
+    return CGRectMake(0, adjustment, [self screenWidth], [self screenHeight] / 2 - 20);// split the slider background height, half here, half image
 }
 
 -(CGSize)getScrollViewContentSize{
@@ -208,13 +207,93 @@
     return UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
 }
 
--(void)updateSlider{
+-(void)updatePlayerTime{
     float progress = self.player.currentTime;
     [self.slider setValue:progress animated:NO];
+    [self updateSubPopupWithLongTime:progress * 1000];
 }
 
 - (IBAction)seekTime:(id)sender {
     self.player.currentTime = self.slider.value;
+}
+
+-(void)updateSubPopupWithLongTime:(float)currentTime{
+
+    if (currentTime != currentTime)
+        currentTime = 0;
+    
+    // setup vars for core data request
+    [self.variablesDictionary setObject:@[] forKey:@"ids"];
+    if(self.descriptionLabel != nil)
+        [self.variablesDictionary setObject:@[@(self.descriptionLabel.tag)] forKey:@"ids"];
+    
+    [self.variablesDictionary setObject:@(currentTime) forKey:@"currentTime"];
+    self.sortKey = @"startTime";
+    self.entity = @"SubPopups";
+    [self fetchedResultsController];
+    NSError *error = nil;
+    [self.fetchedResultsController performFetch:&error];
+    if (error)
+        NSLog(@"error getting sub popups: %@", [error localizedDescription]);
+    
+    if ([self.fetchedResultsController.fetchedObjects count] > 0) {
+        
+        for (SubPopups *sub in [self.fetchedResultsController fetchedObjects]) {
+            if(self.descriptionLabel != nil)
+                [self.descriptionLabel removeFromSuperview];
+            
+            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:sub.popupText]];
+            [self.descriptionLabel setNumberOfLines:0];
+            self.descriptionLabel.tag = [sub.id integerValue];
+            
+            [self.descriptionLabel setFrame:CGRectMake(10, 0, [self getLabelWidth] - 10, self.descriptionLabel.frame.size.height + 30)];
+            NSLog(@"%f %f %f %f", self.descriptionLabel.frame.origin.x, self.descriptionLabel.frame.origin.y, self.descriptionLabel.frame.size.width, self.descriptionLabel.frame.size.height);
+            
+            [self.descriptionLabel setAttributedText:[self getAttributedStringForText:sub.popupText]];
+//            NSLog(@"text y: %ld", (long)self.descriptionLabel.frame.origin.y);
+//            [self.view addSubview:self.descriptionLabel];
+            [self.scrollView addSubview:self.descriptionLabel];
+            [self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, self.descriptionLabel.frame.size.height)];
+            
+            // do scroll view and content height?
+        }
+    }
+    self.fetchedResultsController = nil;
+}
+
+-(float)getLabelWidth{
+    if([self isIpad])
+        return 384 - 20;// 10 pad on each side
+    return 320 - 20;// 10 pad on each side
+}
+
+-(BOOL)isIpad{
+    if([[[UIDevice currentDevice]model] isEqualToString:@"iPad"] || [[[UIDevice currentDevice] model] isEqualToString:@"iPad Simulator"])
+        return YES;
+    return NO;
+}
+
+#pragma mark Core Data Stuff
+
+-(NSFetchedResultsController *)fetchedResultsController {
+    if (_fetchedResultsController != nil)
+        return _fetchedResultsController;
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:self.entity inManagedObjectContext:self.managedObjectContext];
+    
+    [fetchRequest setEntity:entity];
+    
+    // Create the sort descriptors array.
+    NSSortDescriptor *authorDescriptor = [[NSSortDescriptor alloc] initWithKey:self.sortKey ascending:YES];
+    NSArray *sortDescriptors = @[authorDescriptor];
+    [fetchRequest setSortDescriptors:sortDescriptors];
+    [fetchRequest setPredicate:[self.predicate predicateWithSubstitutionVariables:self.variablesDictionary]];
+    
+    // Create and initialize the fetch results controller.
+    _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:nil];
+    _fetchedResultsController.delegate = self;
+    return _fetchedResultsController;
 }
 
 @end

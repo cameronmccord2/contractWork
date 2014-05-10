@@ -32,14 +32,16 @@
         self.currentCaptionLabels = [[NSMutableArray alloc] initWithCapacity:1];
         self.currentPopupButtons = [[NSMutableArray alloc] initWithCapacity:3];
         self.spots = [@[@(0), @(0), @(0)] mutableCopy];
-        self.predicateString = [NSString stringWithFormat:@"(mediaId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.media.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
-        self.predicate = [NSPredicate predicateWithFormat:self.predicateString];
-        
         self.automaticallyAdjustsScrollViewInsets = NO;
         
         self.progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, 70, [self screenWidth], 30)];
         [self.progressView setProgress:0.0f];
+
+        // Core Data init stuff
+        self.predicateString = [NSString stringWithFormat:@"(mediaId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.media.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
+        self.predicate = [NSPredicate predicateWithFormat:self.predicateString];
         self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
+        
         
        
         [self registerForOrientationChanges];

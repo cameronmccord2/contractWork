@@ -13,6 +13,7 @@
 #import "Medias.h"
 #import "Popups.h"
 #import "Captions.h"
+#import "SubPopups.h"
 
 NSString *baseUrl = @"http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/";
 NSString *getMediasUrl = @"medias";
@@ -114,6 +115,7 @@ enum{
         
         // delete the old data
         [self deleteAllObjectsWithEntityDescription:@"Captions" context:context];
+        [self deleteAllObjectsWithEntityDescription:@"SubPopups" context:context];
         [self deleteAllObjectsWithEntityDescription:@"Popups" context:context];
         [self deleteAllObjectsWithEntityDescription:@"Medias" context:context];
         [self deleteAllObjectsWithEntityDescription:@"Languages" context:context];
@@ -200,6 +202,25 @@ enum{
                     p.id = d2[@"id"];
                     p.language = language;
                     p.media = media;
+                    
+                    NSMutableSet *subPopups = [[NSMutableSet alloc] initWithCapacity:[d2[@"subPopups"] count]];
+                    for (NSDictionary *d3 in d2[@"subPopups"]) {
+                        SubPopups *s = [NSEntityDescription insertNewObjectForEntityForName:@"SubPopups" inManagedObjectContext:context];
+                        s.bucketId = d2[@"bucketId"];
+                        s.bucketName = d2[@"bucketName"];
+                        s.popupText = d3[@"popupText"];
+                        s.endTime = d3[@"endTime"];
+                        s.startTime = d3[@"startTime"];
+                        s.extension = d3[@"extension"];
+                        s.filename = d3[@"filename"];
+                        s.filenameInBucket = d3[@"filenameInBucket"];
+                        s.id = d3[@"id"];
+                        s.popupId = d3[@"popupId"];
+                        s.popup = p;
+                        [subPopups addObject:s];
+                    }
+                    p.subPopups = subPopups;
+                    
                     [popups addObject:p];
                 }
                 media.popups = popups;

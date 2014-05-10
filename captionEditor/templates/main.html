@@ -88,7 +88,7 @@
 						<img ng-click="undoRemove($index, 'subPopup', $parent.$index)" class="mUndoButton" src="assets/btnUndo.png" onmousedown="this.src='assets/btnUndoActive.png'" onmouseup="this.src='assets/btnUndo.png'" onmouseout="this.src='assets/btnUndo.png'" ng-show="showAddRemove(!subPopup.showSubPopup)" title="Undo row removal" style="margin-right:45px">
 						
 						<input type="file" style="float:left" ng-show="subPopup.showSubPopup" ng-model="subPopup.file" accept="image/png" app-filereader ng-change="selectedFile(newMedia)"/>
-						<div style="float:left" ng-show="popup.showText">Asset Filename: {{subPopup.filename || subPopup.file.filename || 'None'}}</div>
+						<div style="float:left" ng-show="subPopup.showSubPopup">Asset Filename: {{subPopup.filename || subPopup.file.filename || 'None'}}</div>
 					</div>
 				</div>
 			</div>
@@ -105,17 +105,26 @@
 		<div style="min-height:50px; width:400px; margin:20px;"ng-show="edit.popups[popupPreviewIndex].subPopups.length == 0" ng-bind-html="popupTextPreview"></div>
 		<div ng-show="edit.popups[popupPreviewIndex].subPopups.length">
 			<div class="iPhonePortrait">
-				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
-				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+				<div class="topNavBar">Nav Bar</div>
+				<div ng-class="getSubPopupTextClass(subPopupShowing)" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing && subPopupShowing.filename">
+				<div style="clear:left"></div>
+				<div class="playerControlsBar">Player Controls</div>
 			</div>
 			<div class="iPhoneLandscape">
-				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
-				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+			<div class="topNavBar">Nav Bar</div>
+				<div ng-class="getSubPopupTextClass(subPopupShowing)" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing && subPopupShowing.filename">
+				<div style="clear:left"></div>
+				<div class="playerControlsBar">Player Controls</div>
 			</div>
 			<div style="clear:left"></div>
 			<div class="iPad">
-				<div class="subPopupText" ng-bind-html="subPopupShowing.popupText"></div>
-				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing">
+			<div class="topNavBar">Nav Bar</div>
+				<div ng-class="getSubPopupTextClass(subPopupShowing)" ng-bind-html="subPopupShowing.popupText"></div>
+				<img class="subPopupImage" ng-src="{{subPopupShowing.imageUrl}}" ng-show="subPopupShowing && subPopupShowing.filename">
+				<div style="clear:left"></div>
+				<div class="playerControlsBar">Player Controls</div>
 			</div>
 		</div>
 		

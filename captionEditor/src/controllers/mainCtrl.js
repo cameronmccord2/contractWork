@@ -153,6 +153,12 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 		}
 	}
 
+	$scope.getSubPopupTextClass = function(subPopup){
+		if(subPopup && subPopup.filename)
+			return "subPopupText";
+		return "subPopupTextNoImage";
+	}
+
 	$scope.showSubPopupForTime = function(time){
 		$scope.$apply(function(){
 			time = time * 1000;
@@ -160,7 +166,7 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 				return;
 			for (var i = $scope.edit.popups[$scope.popupPreviewIndex].subPopups.length - 1; i >= 0; i--) {
 				var subPopup = $scope.edit.popups[$scope.popupPreviewIndex].subPopups[i];
-				if($scope.convertCaptionEditorTimeToLong(subPopup.startTime) < time && time < $scope.convertCaptionEditorTimeToLong(subPopup.endTime)){
+				if(subPopup.showSubPopup && $scope.convertCaptionEditorTimeToLong(subPopup.startTime) < time && time < $scope.convertCaptionEditorTimeToLong(subPopup.endTime)){
 					subPopup.imageUrl = "";
 					console.log(subPopup)
 					if(subPopup.filenameInBucket && subPopup.filenameInBucket.length > 0)
@@ -1353,10 +1359,9 @@ function mainCtrl($scope, $routeParams, $rootScope, $q, $http, $location, $timeo
 								};
 								if(subPopup.file)
 									tempSubPopup.filename = subPopup.file.filename;
+								tempPopup.subPopups.push(tempSubPopup);
 							}else if(subPopup.id != undefined && subPopup.id != 0)
 								popupsFactory.deleteSubPopup(subPopup.id);
-
-							tempPopup.subPopups.push(tempSubPopup);
 						};
 						$scope.finalPopups.push(tempPopup);
 

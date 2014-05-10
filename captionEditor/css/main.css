@@ -60,31 +60,82 @@
 	float:left;
 }
 .iPhonePortrait .subPopupText{
-	width:320px;
-	height:240px;
+	width:310px;
+	height:187px;
 	float:left;
+	overflow: auto;
+	margin: 5px;
 }
 .iPhoneLandscape .subPopupText{
-	width:240px;
-	height:320px;
+	width:230px;
+	height:230px;
 	float:left;
+	overflow: auto;
+	margin: 5px;
+}
+.iPhonePortrait .subPopupTextNoImage{
+	width:310px;
+	height:380px;
+	float:left;
+	overflow: auto;
+	margin: 5px;
+}
+.iPhoneLandscape .subPopupTextNoImage{
+	width:470px;
+	height:230px;
+	float:left;
+	overflow: auto;
+	margin: 5px;
+}
+.iPhonePortrait .topNavBar{
+	width:100%;
+	text-align: center;
+	height:44px;
+	border: 1px solid black;
+}
+.iPhoneLandscape .topNavBar{
+	width: 100%;
+	text-align: center;
+	height: 32px;
+	border: 1px solid black;
+}
+.iPad .topNavBar{
+	width: 100%;
+	text-align: center;
+	height: 44px;
+	border: 1px solid black;
 }
 .iPad .subPopupText{
-	width:384px;
-	height:384px;
+	width:374px;
+	height:670px;
 	float:left;
+	overflow: auto;
+	margin: 5px;
+}
+.iPad .subPopupTextNoImage{
+	width:758px;
+	height:670px;
+	float:left;
+	overflow: auto;
+	margin: 5px;
+}
+.playerControlsBar{
+	width:100%;
+	float:left;
+	height:40px;
+	text-align: center;
+	border: 1px solid black;
 }
 .iPhonePortrait .subPopupImage{
-	width:240px;
-	height:240px;
+	width:197px;
+	height:197px;
 	float:left;
-	margin-left: 40px;
+	margin-left: 62px;
 }
 .iPhoneLandscape .subPopupImage{
 	width:240px;
 	height:240px;
 	float:left;
-	margin-top: 40px;
 }
 .iPad .subPopupImage{
 	width:384px;
