@@ -30,6 +30,7 @@
 @property(nonatomic, weak)id<PopupDetailsViewControllerDelegate> delegate;
 @property(nonatomic, strong)UIView *sliderBackground;
 @property(nonatomic, strong)UIButton *playPauseButton;
+@property(nonatomic, strong)UIImageView *imageView;
 
 #pragma mark Core Data Stuff
 @property (nonatomic, strong) NSFetchedResultsController *fetchedResultsController;

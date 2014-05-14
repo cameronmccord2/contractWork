@@ -13,12 +13,12 @@
 #import "Medias.h"
 #import "Popups.h"
 #import "Captions.h"
-#import "SubPopups.h"
 
 NSString *baseUrl = @"http://salesmanbuddyserver.elasticbeanstalk.com/v1/salesmanbuddy/";
 NSString *getMediasUrl = @"medias";
 NSString *mediaUrl = @"mediaFile";
 NSString *videoUrl = @"https://s3-us-west-2.amazonaws.com/";
+NSString *imagesUrl = @"https://s3-us-west-2.amazonaws.com/";
 
 
 @implementation VPDaoV1
@@ -42,6 +42,7 @@ enum{
     if (self != nil) {
         NSString *docPath = [NSSearchPathForDirectoriesInDomains(NSDocumentationDirectory, NSUserDomainMask, YES) objectAtIndex:0];
         videoFilePath = [NSString stringWithFormat:@"%@/%@", docPath, @"videos"];
+        imagesFilePath = [NSString stringWithFormat:@"%@/%@", docPath, @"images"];
     }
     return self;
 }
@@ -60,18 +61,39 @@ enum{
     NSString *fileString = [NSString stringWithFormat:@"%@/%@", videoFilePath, fullFileName];
     if([self pathForFileInBundleWithFilename:media.filenameInBucket extension:media.extension] != nil){
         NSLog(@"found in bundle");
-        [self respondWithThisFile:[self pathForFileInBundleWithFilename:media.filenameInBucket extension:media.extension] toDelegate:delegate];
+        [self respondWithThisFile:[self pathForFileInBundleWithFilename:media.filenameInBucket extension:media.extension] toDelegate:delegate selector:nil];
     }else if ([self doesFileExist:fileString]) {
-        [self respondWithThisFile:fileString toDelegate:delegate];
+        [self respondWithThisFile:fileString toDelegate:delegate selector:nil];
     }else{
         // go get it
         void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
             NSString *fullFilePath = [self saveThisFile:data filename:fullFileName folderContainingFile:videoFilePath];
-            [self respondWithThisFile:fullFilePath toDelegate:delegate];
+            [self respondWithThisFile:fullFilePath toDelegate:delegate selector:nil];
         };
         
         NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, media.bucketName, media.filenameInBucket];
         [self genericGetFunctionForDelegate:delegate forUrl:url requestType:NormalType success:success error:[self errorTemplateForDelegate:delegate selectorOnError:nil] then:[self thenTemplateForDelegate:delegate selectorOnThen:@selector(videoDataThen:progress:)]];
+    }
+}
+
+-(void)getImageData:(id<VPDaoV1DelegateProtocol>)delegate subPopup:(SubPopups *)sub{
+    
+    NSString *fullFileName = [NSString stringWithFormat:@"%@%@", sub.filenameInBucket, sub.extension];
+    NSString *fileString = [NSString stringWithFormat:@"%@/%@", imagesFilePath, fullFileName];
+    if([self pathForFileInBundleWithFilename:sub.filenameInBucket extension:sub.extension] != nil){
+        NSLog(@"found in bundle");
+        [self respondWithThisFile:[self pathForFileInBundleWithFilename:sub.filenameInBucket extension:sub.extension] toDelegate:delegate selector:@selector(fileDataForRequestedImage:)];
+    }else if ([self doesFileExist:fileString]) {
+        [self respondWithThisFile:fileString toDelegate:delegate selector:@selector(fileDataForRequestedImage:)];
+    }else{
+        // go get it
+        void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
+            NSString *fullFilePath = [self saveThisFile:data filename:fullFileName folderContainingFile:imagesFilePath];
+            [self respondWithThisFile:fullFilePath toDelegate:delegate selector:@selector(fileDataForRequestedImage:)];
+        };
+        
+        NSString *url = [NSString stringWithFormat:@"%@%@/%@", imagesUrl, sub.bucketName, sub.filenameInBucket];
+        [self genericGetFunctionForDelegate:delegate forUrl:url requestType:NormalType success:success error:[self errorTemplateForDelegate:delegate selectorOnError:nil] then:[self thenTemplateForDelegate:delegate selectorOnThen:@selector(imageDataThen:progress:)]];
     }
 }
 
@@ -91,14 +113,14 @@ enum{
     
     if([self pathForFileInBundleWithFilename:popup.filenameInBucket extension:popup.extension] != nil){
 //        NSLog(@"found in bundle");
-        [self respondWithThisFile:[self pathForFileInBundleWithFilename:popup.filenameInBucket extension:popup.extension] toDelegate:delegate];
+        [self respondWithThisFile:[self pathForFileInBundleWithFilename:popup.filenameInBucket extension:popup.extension] toDelegate:delegate selector:nil];
     }else if ([self doesFileExist:fileString]) {
-        [self respondWithThisFile:fileString toDelegate:delegate];
+        [self respondWithThisFile:fileString toDelegate:delegate selector:nil];
     }else{
         
         void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
             NSString *fullFilePath = [self saveThisFile:data filename:fullFileName folderContainingFile:videoFilePath];
-            [self respondWithThisFile:fullFilePath toDelegate:delegate];
+            [self respondWithThisFile:fullFilePath toDelegate:delegate selector:nil];
         };
         
         NSString *url = [NSString stringWithFormat:@"%@%@/%@", videoUrl, popup.bucketName, popup.filenameInBucket];
@@ -109,6 +131,7 @@ enum{
 -(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context{
     
     NSString *url = [NSString stringWithFormat:@"%@%@", baseUrl, getMediasUrl];
+    url = [url URLStringByAppendingQueryStringKey:@"version" value:@"2"];
     
     void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
         __block NSError *e = nil;
@@ -328,15 +351,23 @@ enum{
     return NO;
 }
 
--(void)respondWithThisFile:(NSString *)filePath toDelegate:(id<VPDaoV1DelegateProtocol>)delegate{
+-(void)respondWithThisFile:(NSString *)filePath toDelegate:(id<VPDaoV1DelegateProtocol>)delegate selector:(SEL)selector{
 //    if ([delegate respondsToSelector:@selector(fileUrlForRequestedFile:)]) {
 //        [delegate fileUrlForRequestedFile:[NSURL fileURLWithPath:filePath]];
 //    }
-    if ([delegate respondsToSelector:@selector(filePathForRequestedFile:)])
-        [delegate filePathForRequestedFile:filePath];
-    
-    if ([delegate respondsToSelector:@selector(fileDataForRequestedFile:)])
-        [delegate fileDataForRequestedFile:[NSData dataWithContentsOfFile:filePath]];
+    if(selector == nil){
+        if ([delegate respondsToSelector:@selector(filePathForRequestedFile:)])
+            [delegate filePathForRequestedFile:filePath];
+        
+        if ([delegate respondsToSelector:@selector(fileDataForRequestedFile:)])
+            [delegate fileDataForRequestedFile:[NSData dataWithContentsOfFile:filePath]];
+    }else{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        if([delegate respondsToSelector:selector])
+            [delegate performSelector:selector withObject:[NSData dataWithContentsOfFile:filePath]];
+#pragma clang diagnostic pop
+    }
 }
 
 @end

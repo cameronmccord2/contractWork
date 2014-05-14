@@ -8,6 +8,7 @@
 
 #import "DAOManager.h"
 #import "Medias.h"
+#import "SubPopups.h"
 
 @protocol VPDaoV1DelegateProtocol <DAOManagerDelegateProtocol>
 
@@ -16,14 +17,17 @@
 -(void)gotMedias;
 -(void)errorGettingMedias;
 -(void)videoDataThen:(NSURLConnectionWithExtras *)connection progress:(NSProgress *)progress;
+-(void)imageDataThen:(NSURLConnectionWithExtras *)connection progress:(NSProgress *)progress;
 -(void)filePathForRequestedFile:(NSString *)filePath;
 -(void)fileDataForRequestedFile:(NSData *)fileData;
+-(void)fileDataForRequestedImage:(NSData *)imageData;
 
 @end
 
 
 @interface VPDaoV1 : DAOManager{
     NSString *videoFilePath;
+    NSString *imagesFilePath;
 }
 
 
@@ -32,5 +36,6 @@
 -(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context;
 -(void)getVideoData:(id<VPDaoV1DelegateProtocol>)delegate media:(Medias *)media;
 -(void)getPopupData:(id<VPDaoV1DelegateProtocol>)delegate popup:(Popups *)popup;
+-(void)getImageData:(id<VPDaoV1DelegateProtocol>)delegate subPopup:(SubPopups *)sub;
 
 @end

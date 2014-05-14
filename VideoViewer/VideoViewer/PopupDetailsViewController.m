@@ -61,6 +61,12 @@
     [self buildView];
 }
 
+-(void)fileDataForRequestedImage:(NSData *)imageData{
+    if(self.imageView != nil){
+        [self.imageView setImage:[UIImage imageWithData:imageData]];
+    }
+}
+
 -(void)buildView{
     NSError *error = nil;
     if(!self.player){
@@ -115,15 +121,15 @@
                                                         documentAttributes:nil error:nil];
 }
 
--(CGRect)getLabelFrameForText:(NSString *)text{
+-(CGRect)getLabelFrameForText:(NSString *)text width:(float)width{
     NSAttributedString *ats = [self getAttributedStringForText:text];
-    return [ats boundingRectWithSize:CGSizeMake([self screenWidth], 10000.0f) options:(NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin) context:nil];
+    return [ats boundingRectWithSize:CGSizeMake(width, 10000.0f) options:(NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin) context:nil];
 }
 
 - (void) orientationChanged:(NSNotification *)note{
     NSLog(@"fixing");
     [self fixSliderBackground];
-    [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText]];
+    [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText width:[self screenWidth]]];
     [self.descriptionLabel setFrame:CGRectMake(10, 66, self.descriptionLabel.frame.size.width - 20, self.descriptionLabel.frame.size.height + 30)];
     //    NSLog(@"new thing");
 //    UIDevice * device = note.object;
@@ -203,6 +209,24 @@
     return CGRectMake(leftPad, yValue, width, height);
 }
 
+-(CGRect)getImageFrame{
+    long x = [self screenWidth] / 2;
+    long y = 0;
+    long width = [self screenWidth] / 2;
+    long height = width;
+    
+    if([self isIpad]){
+        
+    }else if([self isLandscape]){
+        
+    }else{
+        // TODO get rid of the space of the upper and lower bars
+        x = 0;
+        y = [self screenHeight] / 2;
+    }
+    return CGRectMake(x, y, width, height);
+}
+
 -(BOOL)isLandscape{
     return UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation]);
 }
@@ -242,7 +266,22 @@
             if(self.descriptionLabel != nil)
                 [self.descriptionLabel removeFromSuperview];
             
-            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:sub.popupText]];
+            float labelWidth = [self screenWidth];
+            
+            if(self.imageView != nil){
+                [self.imageView removeFromSuperview];
+                self.imageView = nil;
+            }
+            
+            if(sub.filenameInBucket != nil){
+                self.imageView = [[UIImageView alloc] initWithFrame:[self getImageFrame]];
+                [self.imageView setBackgroundColor:[UIColor whiteColor]];
+                [self.scrollView addSubview:self.imageView];
+                [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
+                labelWidth = [self screenWidth] / 2;
+            }
+            
+            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:sub.popupText width:labelWidth]];
             [self.descriptionLabel setNumberOfLines:0];
             self.descriptionLabel.tag = [sub.id integerValue];
             
