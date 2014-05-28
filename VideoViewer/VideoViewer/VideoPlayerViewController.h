@@ -18,6 +18,7 @@
 @property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
 @property(nonatomic, strong)Medias *media;
 @property(nonatomic, strong)UIScrollView *scrollView;
+@property(nonatomic, strong)UIScrollView *popupScrollView;
 @property(nonatomic, strong)MPMoviePlayerController *player;
 @property(nonatomic, strong)NSString *videoPath;
 @property(nonatomic, strong)NSTimer *timer;

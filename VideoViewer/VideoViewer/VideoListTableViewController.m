@@ -27,7 +27,8 @@
 
 - (void)viewDidLoad{
     [super viewDidLoad];
-    [[VPDaoV1 sharedManager] getMedias:self forContext:self.managedObjectContext];
+    [[VPDaoV1 sharedManager] getMedias:self forContext:self.managedObjectContext reload:NO];
+
     
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
@@ -101,6 +102,8 @@
 
 
 
+
+
 -(NSFetchedResultsController *)fetchedResultsController {
     if (_fetchedResultsController != nil) {
         return _fetchedResultsController;
@@ -118,6 +121,7 @@
     [fetchRequest setSortDescriptors:sortDescriptors];
     [fetchRequest setFetchBatchSize:20];
     // Create and initialize the fetch results controller.
+    
     _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:@"Root"];// nil was @"author"
     _fetchedResultsController.delegate = self;
     

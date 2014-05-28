@@ -33,7 +33,7 @@
 
 
 +(instancetype)sharedManager;
--(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context;
+-(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context reload:(BOOL)reload;
 -(void)getVideoData:(id<VPDaoV1DelegateProtocol>)delegate media:(Medias *)media;
 -(void)getPopupData:(id<VPDaoV1DelegateProtocol>)delegate popup:(Popups *)popup;
 -(void)getImageData:(id<VPDaoV1DelegateProtocol>)delegate subPopup:(SubPopups *)sub;

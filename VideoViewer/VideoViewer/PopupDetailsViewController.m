@@ -32,6 +32,7 @@
         NSString *predicateString = [NSString stringWithFormat:@"(popupId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.popup.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
         self.predicate = [NSPredicate predicateWithFormat:predicateString];
         self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
+        
     }
     return self;
 }
@@ -76,7 +77,7 @@
         [self.player play];
     }
     
-    self.scrollView = [[UIScrollView alloc] initWithFrame:[self getScrollViewFrame]];
+    self.scrollView = [[UIScrollView alloc] initWithFrame:[self getScrollViewFrameNoImage]];
     [self.scrollView setBackgroundColor:[UIColor whiteColor]];
     
     [self.view addSubview:self.scrollView];
@@ -188,11 +189,18 @@
     return CGRectMake(0, [self screenHeight] - height, [self screenWidth], height);
 }
 
--(CGRect)getScrollViewFrame{
+-(CGRect)getScrollViewFrameWithImage{
     NSInteger adjustment = 62;
     if([self isLandscape])
         return CGRectMake(0, adjustment, [self screenHeight] / 2, [self screenWidth] - 20);// split the slider background height, half here, half image
     return CGRectMake(0, adjustment, [self screenWidth], [self screenHeight] / 2 - 20);// split the slider background height, half here, half image
+}
+
+-(CGRect)getScrollViewFrameNoImage{
+    NSInteger adjustment = 62;
+    if([self isLandscape])
+        return CGRectMake(0, adjustment - 10, [self screenWidth], [self screenHeight] - 92);
+    return CGRectMake(0, adjustment, [self screenWidth], [self screenHeight] - 103);
 }
 
 -(CGSize)getScrollViewContentSize{
@@ -266,7 +274,8 @@
             if(self.descriptionLabel != nil)
                 [self.descriptionLabel removeFromSuperview];
             
-            float labelWidth = [self screenWidth];
+            float labelWidth = [self getLabelWidthNoImage];
+            int labelTopPad = 10;
             
             if(self.imageView != nil){
                 [self.imageView removeFromSuperview];
@@ -274,25 +283,31 @@
             }
             
             if(sub.filenameInBucket != nil){
+//                NSLog(@"filenameinbucket: %@", sub.filenameInBucket);
                 self.imageView = [[UIImageView alloc] initWithFrame:[self getImageFrame]];
                 [self.imageView setBackgroundColor:[UIColor whiteColor]];
                 [self.scrollView addSubview:self.imageView];
                 [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
                 labelWidth = [self screenWidth] / 2;
-            }
+                [self.scrollView setFrame:[self getScrollViewFrameWithImage]];
+                labelWidth = [self getLabelWidthWithImage];
+            }else
+                [self.scrollView setFrame:[self getScrollViewFrameNoImage]];
             
-            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:sub.popupText width:labelWidth]];
+            NSString *subPopupText = sub.popupText;
+//            subPopupText = [self multiplyString:subPopupText times:1000];
+            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:subPopupText width:labelWidth]];
             [self.descriptionLabel setNumberOfLines:0];
             self.descriptionLabel.tag = [sub.id integerValue];
             
-            [self.descriptionLabel setFrame:CGRectMake(10, 0, [self getLabelWidth] - 10, self.descriptionLabel.frame.size.height + 30)];
-            NSLog(@"%f %f %f %f", self.descriptionLabel.frame.origin.x, self.descriptionLabel.frame.origin.y, self.descriptionLabel.frame.size.width, self.descriptionLabel.frame.size.height);
+            [self.descriptionLabel setFrame:CGRectMake(10, labelTopPad, labelWidth, self.descriptionLabel.frame.size.height + 30)];
             
-            [self.descriptionLabel setAttributedText:[self getAttributedStringForText:sub.popupText]];
+            [self.descriptionLabel setAttributedText:[self getAttributedStringForText:subPopupText]];
+            [self.descriptionLabel setFont:[UIFont systemFontOfSize:18.0]];
 //            NSLog(@"text y: %ld", (long)self.descriptionLabel.frame.origin.y);
 //            [self.view addSubview:self.descriptionLabel];
             [self.scrollView addSubview:self.descriptionLabel];
-            [self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, self.descriptionLabel.frame.size.height)];
+            [self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, self.descriptionLabel.frame.size.height + labelTopPad)];
             
             // do scroll view and content height?
         }
@@ -300,10 +315,24 @@
     self.fetchedResultsController = nil;
 }
 
--(float)getLabelWidth{
+-(NSString *)multiplyString:(NSString *)str times:(int)times{
+    NSString *final = [NSString stringWithFormat:@"%@", str];
+    for (int i = 0; i < times; i++) {
+        final = [NSString stringWithFormat:@"%@%@", final, str];
+    }
+    return final;
+}
+
+-(float)getLabelWidthNoImage{
     if([self isIpad])
         return 384 - 20;// 10 pad on each side
-    return 320 - 20;// 10 pad on each side
+    return [self screenWidth] - 20;// 10 pad on each side
+}
+
+-(float)getLabelWidthWithImage{
+    if([self isIpad])
+        return 384 - 20;// 10 pad on each side
+    return [self screenWidth]/2 - 20;// 10 pad on each side
 }
 
 -(BOOL)isIpad{

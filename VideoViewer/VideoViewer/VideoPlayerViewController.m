@@ -30,20 +30,13 @@
         self.currentCaptions = [[NSMutableArray alloc] initWithCapacity:1];
         self.currentPopups = [[NSMutableArray alloc] initWithCapacity:3];
         self.currentCaptionLabels = [[NSMutableArray alloc] initWithCapacity:1];
-        self.currentPopupButtons = [[NSMutableArray alloc] initWithCapacity:3];
+        self.currentPopupButtons = [[NSMutableArray alloc] initWithCapacity:10];
         self.spots = [@[@(0), @(0), @(0)] mutableCopy];
         self.automaticallyAdjustsScrollViewInsets = NO;
         
         self.progressView = [[UIProgressView alloc] initWithFrame:CGRectMake(0, 70, [self screenWidth], 30)];
         [self.progressView setProgress:0.0f];
-
-        // Core Data init stuff
-        self.predicateString = [NSString stringWithFormat:@"(mediaId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.media.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
-        self.predicate = [NSPredicate predicateWithFormat:self.predicateString];
-        self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
         
-        
-       
         [self registerForOrientationChanges];
     }
     return self;
@@ -73,6 +66,14 @@ enum {
 
 -(void)filePathForRequestedFile:(NSString *)filePath{
     self.videoPath = filePath;
+    
+    [self generatePopupList];
+    
+    // Core Data init stuff
+    self.predicateString = [NSString stringWithFormat:@"(mediaId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.media.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
+    self.predicate = [NSPredicate predicateWithFormat:self.predicateString];
+    self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
+    
     [self buildView];
 }
 
@@ -81,7 +82,7 @@ enum {
         self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, [self view].frame.size.width, [self view].frame.size.height)];
         [self.scrollView setAutoresizingMask:(UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight)];
         [self.scrollView setBackgroundColor:[UIColor whiteColor]];
-        [self makeLabelWithText:@"Loading your video" x:0 y:20 width:[self screenWidth] height:30 topPad:10 view:self.scrollView backgroundColor:[UIColor redColor] alignToCenter:YES addToList:self.currentCaptionLabels fontColor:[UIColor blackColor] font:[UIFont systemFontOfSize:[UIFont systemFontSize]] sizeToFit:NO];
+        [self makeLabelWithText:@"Loading your video" frame:CGRectMake(0, 100, [self screenWidth], 30) view:self.scrollView backgroundColor:[UIColor redColor] alignToCenter:YES addToList:self.currentCaptionLabels fontColor:[UIColor blackColor] font:[UIFont systemFontOfSize:[UIFont systemFontSize]] sizeToFit:NO];
         [self.progressView setProgress:progress.fractionCompleted];
         [self.scrollView addSubview:self.progressView];
         [self.view addSubview:self.scrollView];
@@ -155,6 +156,11 @@ enum {
 }
 
 -(void)checkCaptionsPopups{
+    [self checkCaptions];
+//    [self checkPopups];
+}
+
+-(void)checkCaptions{
     NSError *error = nil;
     NSTimeInterval currentTime = self.player.currentPlaybackTime * 1000;
     if (currentTime != currentTime)
@@ -166,6 +172,7 @@ enum {
     [self.variablesDictionary setObject:@(currentTime) forKey:@"currentTime"];
     self.sortKey = @"startTime";
     self.entity = @"Captions";
+    self.fetchedResultsController = nil;
     [self fetchedResultsController];
     [self.fetchedResultsController performFetch:&error];
     if (error)
@@ -184,94 +191,94 @@ enum {
             [self.currentCaptions addObject:c];
             
             UIColor *captionBackground = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.5f];
-            NSInteger requiredWidth = [self screenWidth] - ([self screenWidth] * 0.1f);
             UIFont *labelFont = [UIFont systemFontOfSize:14.0f];
-            NSString *bigString = [NSString stringWithFormat:@"%@%@%@", c.caption, c.caption, c.caption];
-            CGRect stringFrame = [bigString boundingRectWithSize:CGSizeMake(requiredWidth, 1000) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName : labelFont} context:nil];
-            int requiredHeight = stringFrame.size.height * 1.5f;
-            int leftPad = ([self screenWidth] - requiredWidth) / 2.0f;
-            yValue = [self makeLabelWithText:bigString x:leftPad y:yValue width:requiredWidth height:requiredHeight topPad:0 view:self.scrollView backgroundColor:captionBackground alignToCenter:YES addToList:self.currentCaptionLabels fontColor:[UIColor whiteColor] font:labelFont sizeToFit:YES];
-        }
-    }
-    self.fetchedResultsController = nil;
-    
-    self.entity = @"Popups";
-    
-    [self.fetchedResultsController performFetch:&error];
-    if (error)
-        NSLog(@"error getting popups: %@", [error localizedDescription]);
-    
-    if ([self.fetchedResultsController.fetchedObjects count]) {
-        
-        NSArray *currentIds = [self.currentPopups valueForKeyPath:@"@distinctUnionOfObjects.id"];
-        NSArray *fetchedIds = [self.fetchedResultsController.fetchedObjects valueForKeyPath:@"@distinctUnionOfObjects.id"];
-        
-//        NSPredicate *toKeepPredicate = [NSPredicate predicateWithFormat:@"id IN $ids"];
-//        NSArray *toKeep = [self.currentPopups filteredArrayUsingPredicate:[toKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
-        NSPredicate *toRemoveKeepPredicate = [NSPredicate predicateWithFormat:@"NOT (id IN $ids)"];
-        NSArray *toRemove = [self.currentPopups filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
-        NSArray *toAdd = [self.fetchedResultsController.fetchedObjects filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": currentIds}]];
-                                                                                                                                                               
-//        if ([toRemove count] > 0)
-//            NSLog(@"Removing %ld", (long)[toRemove count]);
-//        if([toKeep count] == 0)
-//            NSLog(@"removing all");
-//        if([toAdd count] > 0)
-//            NSLog(@"adding %ld", (long)[toAdd count]);
-        
-        
-        NSInteger yValue = [self popupStartingY];
-        int leftPad = 10;
-        int height = 50;
-        int topPad = 0;
-        
-        
-        for (Popups *p in toRemove) {
-            for (UIButton *b in self.currentPopupButtons) {
-                if (b.tag == [p.id integerValue]) {
-                    [self.currentPopupButtons removeObject:b];
-                    [b removeFromSuperview];
-                    break;
-                }
-            }
-            for (int i = 0; i < [self.spots count]; i++) {
-                if ([[self.spots objectAtIndex:i] integerValue] == [p.id integerValue]) {
-                    [self.spots replaceObjectAtIndex:i withObject:@(0)];
-                    break;
-                }
-            }
             
-            [self.currentPopups removeObject:p];
-        }
-        
-        
-        
-        for (Popups *p in toAdd) {
-            [self.currentPopups addObject:p];
-            NSInteger startingYAdd = 0;
-            for (int i = 0; i < [self.spots count]; i++) {
-                if ([[self.spots objectAtIndex:i] integerValue] == 0) {
-                    [self.spots replaceObjectAtIndex:i withObject:p.id];
-                    startingYAdd = (height + topPad) * i;
-                    break;
-                }
-            }
-
-            yValue = [self makeUIButtonWithTitle:p.displayName x:leftPad y:yValue + startingYAdd width:[self screenWidth] height:height topPad:topPad view:self.scrollView backgroundColor:[UIColor greenColor] alignToCenter:YES selectorToDo:@selector(popupTapped:) forControlEvent:UIControlEventTouchUpInside target:self addToList:self.currentPopupButtons sizeToFit:YES tag:[p.id integerValue]];
+            yValue = [self makeLabelWithText:c.caption frame:[self getCaptionFrameForString:c.caption yValue:yValue topPad:0 font:labelFont] view:self.scrollView backgroundColor:captionBackground alignToCenter:YES addToList:self.currentCaptionLabels fontColor:[UIColor whiteColor] font:labelFont sizeToFit:YES];
         }
     }
     self.fetchedResultsController = nil;
 }
 
+-(CGRect)getCaptionFrameForString:(NSString *)title yValue:(NSInteger)yValue topPad:(NSInteger)topPad font:(UIFont *)font{
+    
+    NSInteger requiredWidth = [self getVideoPlayerFrame].size.width - ([self getVideoPlayerFrame].size.width * 0.1f);
+    
+     CGRect stringFrame = [title boundingRectWithSize:CGSizeMake(requiredWidth, 1000) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName : font} context:nil];
+    int requiredHeight = stringFrame.size.height * 1.5f;
+    
+    int leftPad = ([self getVideoPlayerFrame].size.width - requiredWidth) / 2.0f;
+    if([self isLandscape] && [self.currentPopups count] > 0)
+        leftPad = [self getPopupScrollViewFrame].size.width + ([self getVideoPlayerFrame].size.width - requiredWidth) / 2.0f;
+    return CGRectMake(leftPad, yValue + topPad, requiredWidth, requiredHeight);
+}
+
+//-(void)checkPopups{
+//    self.entity = @"Popups";
+//    NSError *error = nil;
+//    
+//    [self.fetchedResultsController performFetch:&error];
+//    if (error)
+//        NSLog(@"error getting popups: %@", [error localizedDescription]);
+//    
+//    if ([self.fetchedResultsController.fetchedObjects count]) {
+//        
+//        NSArray *currentIds = [self.currentPopups valueForKeyPath:@"@distinctUnionOfObjects.id"];
+//        NSArray *fetchedIds = [self.fetchedResultsController.fetchedObjects valueForKeyPath:@"@distinctUnionOfObjects.id"];
+//        
+//        NSPredicate *toRemoveKeepPredicate = [NSPredicate predicateWithFormat:@"NOT (id IN $ids)"];
+//        NSArray *toRemove = [self.currentPopups filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": fetchedIds}]];
+//        NSArray *toAdd = [self.fetchedResultsController.fetchedObjects filteredArrayUsingPredicate:[toRemoveKeepPredicate predicateWithSubstitutionVariables:@{@"ids": currentIds}]];
+//
+//        NSInteger yValue = [self popupStartingY];
+//        int leftPad = 10;
+//        int height = 45;
+//        int topPad = 0;
+//        
+//        
+//        for (Popups *p in toRemove) {
+//            for (UIButton *b in self.currentPopupButtons) {
+//                if (b.tag == [p.id integerValue]) {
+//                    [self.currentPopupButtons removeObject:b];
+//                    [b removeFromSuperview];
+//                    break;
+//                }
+//            }
+//            for (int i = 0; i < [self.spots count]; i++) {
+//                if ([[self.spots objectAtIndex:i] integerValue] == [p.id integerValue]) {
+//                    [self.spots replaceObjectAtIndex:i withObject:@(0)];
+//                    break;
+//                }
+//            }
+//            
+//            [self.currentPopups removeObject:p];
+//        }
+//
+//        for (Popups *p in toAdd) {
+//            [self.currentPopups addObject:p];
+//            NSInteger startingYAdd = 0;
+//            for (int i = 0; i < [self.spots count]; i++) {
+//                if ([[self.spots objectAtIndex:i] integerValue] == 0) {
+//                    [self.spots replaceObjectAtIndex:i withObject:p.id];
+//                    startingYAdd = (height + topPad) * i;
+//                    break;
+//                }
+//            }
+//
+//            yValue = [self makeUIButtonWithTitle:p.displayName x:leftPad y:yValue + startingYAdd width:[self screenWidth] height:height topPad:topPad view:self.scrollView backgroundColor:[UIColor greenColor] alignToCenter:YES selectorToDo:@selector(popupTapped:) forControlEvent:UIControlEventTouchUpInside target:self addToList:self.currentPopupButtons sizeToFit:YES tag:[p.id integerValue]];
+//        }
+//    }
+//    self.fetchedResultsController = nil;
+//}
+
 -(void)popupTapped:(UIButton *)sender{
-//    NSLog(@"tapped");
+    NSLog(@"tapped");
     [self.player pause];
     self.portraitOrLandscape = WasPortrait;
     if([self isLandscape])
         self.portraitOrLandscape = WasLandscape;
     for (Popups *p in self.currentPopups) {
         if (sender.titleLabel.text == p.displayName) {
-//            NSLog(@"found: %@", p);
+            NSLog(@"found: %@", p);
             PopupDetailsViewController *pdvc = [[PopupDetailsViewController alloc] initWithPopup:p context:self.managedObjectContext];
             [pdvc setWillReturnDelegate:self];
             [self.navigationController pushViewController:pdvc animated:YES];
@@ -281,15 +288,10 @@ enum {
 }
 
 -(void)buildView{
-    
-    
-    
-//    self.scrollView = [[UIScrollView alloc] init];
-//    self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, [self view].frame.size.width, [self view].frame.size.height)];
     self.scrollView = [[UIScrollView alloc] initWithFrame:[self getScrollViewFrame]];
     [self.scrollView setContentSize:[self getScrollViewContentSize]];
     [self.scrollView setContentInset:[self getScrollViewContentInsets]];
-    [self.scrollView setBackgroundColor:[UIColor whiteColor]];
+    [self.scrollView setBackgroundColor:[UIColor blackColor]];
     int yValue = 0;
     [self registerForVideoPlayerNotifications];
     
@@ -300,22 +302,55 @@ enum {
     yValue += 3000;
     
     [self.scrollView addSubview:self.player.view];
-    
-    
-//    if ([self isLandscape]) {
-//        NSLog(@"lnschape");
-//        [self.navigationController setHidesBottomBarWhenPushed:YES];
-////        [self.scrollView setContentSize:CGSizeMake([self view].frame.size.height, [self view].frame.size.width)];
-////        [self.scrollView setFrame:CGRectMake(0, 0, [self view].frame.size.height, [self view].frame.size.width)];
-////        [self.player.view setFrame:[self getVideoPlayerFrame]];
-//    }else{
-////        [self.scrollView setContentSize:CGSizeMake([self view].frame.size.height, [self view].frame.size.width)];
-////        [self.scrollView setFrame:CGRectMake(0, 0, [self view].frame.size.height, [self view].frame.size.width)];
-////        [self.player.view setFrame:[self getVideoPlayerFrame]];
-//    }
     [self fixScrollViewWidth];
+    [self.scrollView addSubview:self.popupScrollView];
     [self.view addSubview:self.scrollView];
     [self.player play];
+}
+
+-(void)generatePopupList{
+    self.predicate = [NSPredicate predicateWithFormat:[NSString stringWithFormat:@"mediaId == %@", self.media.id]];
+    self.entity = @"Popups";
+    self.sortKey = @"startTime";
+    NSError *error = nil;
+    [self fetchedResultsController];
+    [self.fetchedResultsController performFetch:&error];
+    if(error){
+        NSLog(@"get popups list error: %@", [error localizedDescription]);
+    }else{
+        
+        NSInteger yValue = 0;
+        
+        UIColor *backgroundColor = [UIColor greenColor];
+        SEL selector = @selector(popupTapped:);
+        
+        self.popupScrollView = [[UIScrollView alloc] initWithFrame:[self getPopupScrollViewFrame]];
+        
+        for (Popups *p in self.fetchedResultsController.fetchedObjects) {
+            [self.currentPopups addObject:p];
+            
+            UIButton *button = [[UIButton alloc] initWithFrame:[self getPopupButtonFrameWithStartingY:yValue]];
+            [button setTag:[p.id intValue]];
+            [button setBackgroundColor:backgroundColor];
+            [button setTitle:p.displayName forState:UIControlStateNormal];
+            [button addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];
+            
+            [self.popupScrollView addSubview:button];
+            [self.currentPopupButtons addObject:button];
+
+            yValue += button.frame.size.height;
+            
+        }
+        [self.popupScrollView setContentSize:CGSizeMake(self.popupScrollView.frame.size.width, yValue)];
+    }
+}
+
+-(CGRect)getPopupButtonFrameWithStartingY:(NSInteger)y{
+    int xValue = 0;
+    int width = [self getPopupScrollViewFrame].size.width;
+    int height = 30;
+    int topPad = 0;
+    return CGRectMake(xValue, y + topPad, width, height);
 }
 
 -(BOOL)isLandscape{
@@ -352,21 +387,23 @@ enum {
 -(NSInteger)getCaptionsStartingY{
     if([self isLandscape])
         return 160;
-    return 200;
+    return 120;
 }
 
 -(void)fixCurrentPopups{
+    [self.popupScrollView setFrame:[self getPopupScrollViewFrame]];
     int val = 240;
     if(![self isLandscape])
         val = -240;
     for (UIButton *b in self.currentPopupButtons) {
-        [b setFrame:CGRectMake(b.frame.origin.x, b.frame.origin.y - val, b.frame.size.width, b.frame.size.height)];
+        [b setFrame:[self getPopupButtonFrameWithStartingY:b.frame.origin.y]];
+        [self.popupScrollView setContentSize:CGSizeMake([self getPopupScrollViewFrame].size.width, b.frame.origin.y + b.frame.size.height)];
     }
 }
 
 -(void)fixCurrentCaptions{
     for (UILabel *l in self.currentCaptionLabels) {
-        [l setFrame:CGRectMake(l.frame.origin.x, [self getCaptionsStartingY], l.frame.size.width, l.frame.size.height)];
+        [l setFrame:[self getCaptionFrameForString:l.text yValue:[self getCaptionsStartingY] topPad:0 font:l.font]];
     }
 }
 
@@ -386,27 +423,51 @@ enum {
     NSInteger heightAdjust = 0;
     if([self isIpad])
         heightAdjust = 400;
-    if([self isLandscape])
-        return CGRectMake(0, -30, [self screenWidth], 300 + heightAdjust);
-    return CGRectMake(0, 0, [self screenWidth], 200 + heightAdjust);
+    if([self isLandscape]){
+        if([self.currentPopups count] > 0)
+            return CGRectMake([self getPopupScrollViewFrame].size.width, -30, [self getScrollViewFrame].size.width - [self getPopupScrollViewFrame].size.width, 300 + heightAdjust);// -30, why?
+        else
+            return CGRectMake(0, 0, [self getScrollViewFrame].size.width, [self getScrollViewFrame].size.height);
+    }
+    return CGRectMake(0, 0, [self getScrollViewFrame].size.width, 200 + heightAdjust);
+    
 }
 
 -(CGRect)getScrollViewFrame{
+//    CGRect popupScrollViewFrame = [self getPopupScrollViewFrame];
+    int topPad = [self getNavBarHeight];
+//    if([self isLandscape])
+//        return CGRectMake(popupScrollViewFrame.size.width, 56, [self screenWidth] - popupScrollViewFrame.size.width, [self screenHeight]);
+//    return CGRectMake(0, topPad, [self screenWidth], [self screenHeight] - popupScrollViewFrame.size.height);
+    return CGRectMake(0, topPad, [self screenWidth], [self screenHeight] - topPad);
+}
+
+-(CGRect)getPopupScrollViewFrame{
+//    int topPad = [self getNavBarHeight];
+    int landscapeWidth = 200;
+    if([self isIpad])
+        landscapeWidth += 100;
     if([self isLandscape])
-        return CGRectMake(0, 56, [self view].frame.size.width, [self view].frame.size.height);
-    return CGRectMake(0, 56, [self view].frame.size.width, [self view].frame.size.height);
+        return CGRectMake(0, 0, landscapeWidth, [self getScrollViewFrame].size.height);
+    return CGRectMake(0, [self getVideoPlayerFrame].size.height, [self getScrollViewFrame].size.width, [self getScrollViewFrame].size.height - [self getVideoPlayerFrame].size.height);
 }
 
 -(CGSize)getScrollViewContentSize{
-    if([self isLandscape])
-        return CGSizeMake([self view].frame.size.width, [self view].frame.size.height);
-    return CGSizeMake([self view].frame.size.width, [self view].frame.size.height);
+//    if([self isLandscape])
+//        return CGSizeMake([self view].frame.size.width, [self view].frame.size.height);
+    return [self getScrollViewFrame].size;
 }
 
 -(NSInteger)popupStartingY{
     if([self isLandscape])
         return 10;
     return 250;
+}
+
+-(int)getNavBarHeight{
+    if([self isLandscape])
+        return 52;
+    return 56;
 }
 
 -(NSInteger)screenWidth{
@@ -433,8 +494,8 @@ enum {
     return NO;
 }
 
--(NSInteger)makeLabelWithText:(NSString *)text x:(NSInteger)x y:(NSInteger)y width:(NSInteger)width height:(NSInteger)height topPad:(NSInteger)topPad view:(UIScrollView *)view backgroundColor:(UIColor *)color alignToCenter:(BOOL)alignToCenter addToList:(NSMutableArray *)array fontColor:(UIColor *)fontColor font:(UIFont *)font sizeToFit:(BOOL)sizeToFit{
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(x, y + topPad, width, height)];
+-(NSInteger)makeLabelWithText:(NSString *)text frame:(CGRect)frame view:(UIScrollView *)view backgroundColor:(UIColor *)color alignToCenter:(BOOL)alignToCenter addToList:(NSMutableArray *)array fontColor:(UIColor *)fontColor font:(UIFont *)font sizeToFit:(BOOL)sizeToFit{
+    UILabel *title = [[UILabel alloc] initWithFrame:frame];
     [title setBackgroundColor:color];
     [title setFont:font];
     [title setTextColor:fontColor];
@@ -450,12 +511,32 @@ enum {
     [view addSubview:title];
     if(sizeToFit){
         [title sizeToFit];
-        [title setFrame:CGRectMake(x, y + topPad, width, title.frame.size.height)];
+        [title setFrame:CGRectMake(frame.origin.x, frame.origin.y, frame.size.width, title.frame.size.height + 10)];
     }
-    return y + height + topPad;
+    return frame.size.height + frame.origin.y;
 }
 
 -(NSInteger)makeUIButtonWithTitle:(NSString *)title x:(NSInteger)x y:(NSInteger)y width:(NSInteger)width height:(NSInteger)height topPad:(NSInteger)topPad view:(UIScrollView *)view backgroundColor:(UIColor *)color alignToCenter:(BOOL)alignToCenter selectorToDo:(SEL)selector forControlEvent:(UIControlEvents)controlEvent target:(id)target addToList:(NSMutableArray *)array sizeToFit:(BOOL)sizeToFit tag:(NSInteger)tag{
+    UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(x, y + topPad, width, height)];
+    [button setTag:tag];
+    [button setBackgroundColor:color];
+    [button setTitle:title forState:UIControlStateNormal];
+    [button addTarget:target action:selector forControlEvents:controlEvent];
+    [button.titleLabel setFont:[UIFont systemFontOfSize:26.0f]];
+    if (alignToCenter)
+        [button setCenter:CGPointMake(self.view.center.x, y + topPad + height * 0.5f)];
+    
+    [view addSubview:button];
+    if(array)
+        [array addObject:button];
+    if(sizeToFit){
+        [button sizeToFit];
+        [button setFrame:CGRectMake(x, y + topPad, button.frame.size.width + (button.frame.size.width * 0.4f), button.frame.size.height)];
+    }
+    return y + topPad + height;
+}
+
+-(NSInteger)makePopupListElementWithTitle:(NSString *)title x:(NSInteger)x y:(NSInteger)y width:(NSInteger)width height:(NSInteger)height topPad:(NSInteger)topPad view:(UIScrollView *)view backgroundColor:(UIColor *)color alignToCenter:(BOOL)alignToCenter selectorToDo:(SEL)selector forControlEvent:(UIControlEvents)controlEvent target:(id)target addToList:(NSMutableArray *)array sizeToFit:(BOOL)sizeToFit tag:(NSInteger)tag{
     UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(x, y + topPad, width, height)];
     [button setTag:tag];
     [button setBackgroundColor:color];
@@ -488,9 +569,13 @@ enum {
     NSSortDescriptor *authorDescriptor = [[NSSortDescriptor alloc] initWithKey:self.sortKey ascending:YES];
     NSArray *sortDescriptors = @[authorDescriptor];
     [fetchRequest setSortDescriptors:sortDescriptors];
-    [fetchRequest setPredicate:[self.predicate predicateWithSubstitutionVariables:self.variablesDictionary]];
+    if(self.variablesDictionary)
+        [fetchRequest setPredicate:[self.predicate predicateWithSubstitutionVariables:self.variablesDictionary]];
+    else
+        [fetchRequest setPredicate:self.predicate];
     
     // Create and initialize the fetch results controller.
+    
     _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:nil];
     _fetchedResultsController.delegate = self;
     return _fetchedResultsController;

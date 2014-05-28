@@ -128,172 +128,182 @@ enum{
     }
 }
 
--(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context{
+-(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context reload:(BOOL)reload{
     
-    NSString *url = [NSString stringWithFormat:@"%@%@", baseUrl, getMediasUrl];
-    url = [url URLStringByAppendingQueryStringKey:@"version" value:@"2"];
     
-    void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
-        __block NSError *e = nil;
+    SEL successSelector = @selector(gotMedias);
+    
+    if(reload){
+        NSString *url = [NSString stringWithFormat:@"%@%@", baseUrl, getMediasUrl];
+        url = [url URLStringByAppendingQueryStringKey:@"version" value:@"1"];
         
-        // delete the old data
-        [self deleteAllObjectsWithEntityDescription:@"Captions" context:context];
-        [self deleteAllObjectsWithEntityDescription:@"SubPopups" context:context];
-        [self deleteAllObjectsWithEntityDescription:@"Popups" context:context];
-        [self deleteAllObjectsWithEntityDescription:@"Medias" context:context];
-        [self deleteAllObjectsWithEntityDescription:@"Languages" context:context];
-        
-        if (![context save:&e]) {
-            NSLog(@"Whoops, couldn't save deletions: %@", e);
-        }else
-            NSLog(@"No errors! Saving deletions finished");
-        
-        SEL successSelector = @selector(gotMedias);
-        
-        NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&e];
-        __block int i = 0;
-        if (e != nil) {
-            [self doJsonError:data error:e];
-        }else if ([delegate respondsToSelector:successSelector]) {
-            // parse out the data into core data
+        void(^success)(NSData *, void(^)()) = ^void(NSData *data, void(^cleanUp)()){
+            __block NSError *e = nil;
             
-            __block Languages *language = nil;
-            __block NSMutableSet *medias = [[NSMutableSet alloc] initWithCapacity:[jsonArray count]];
-            [jsonArray enumerateObjectsUsingBlock:^(id d, NSUInteger idx, BOOL *stop){
-                i++;
-                // language
-                if (language == nil) {
-                    NSDictionary *lang = d[@"language"];
-                    // parse language
-                    language = [NSEntityDescription insertNewObjectForEntityForName:@"Languages" inManagedObjectContext:context];
-                    language.name = lang[@"name"];
-                    language.code1 = lang[@"code1"];
-                    language.code2 = lang[@"code2"];
-                    language.mtcId = lang[@"mtcId"];
-                    language.id = lang[@"id"];
-                    language.nativeName = lang[@"nativeName"];
-                }
+            // delete the old data
+            [self deleteAllObjectsWithEntityDescription:@"Captions" context:context];
+            [self deleteAllObjectsWithEntityDescription:@"SubPopups" context:context];
+            [self deleteAllObjectsWithEntityDescription:@"Popups" context:context];
+            [self deleteAllObjectsWithEntityDescription:@"Medias" context:context];
+            [self deleteAllObjectsWithEntityDescription:@"Languages" context:context];
+            
+            if (![context save:&e]) {
+                NSLog(@"Whoops, couldn't save deletions: %@", e);
+            }else
+                NSLog(@"No errors! Saving deletions finished");
+            
+            
+            
+            NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&e];
+            __block int i = 0;
+            if (e != nil) {
+                [self doJsonError:data error:e];
+            }else if ([delegate respondsToSelector:successSelector]) {
+                // parse out the data into core data
                 
-                // media
-                // parse media
-                Medias *media = [NSEntityDescription insertNewObjectForEntityForName:@"Medias" inManagedObjectContext:context];
-                media.name = d[@"name"];
-                media.id = d[@"id"];
-                media.filename = d[@"filename"];
-                media.filenameInBucket = d[@"filenameInBucket"];
-                media.audioLanguageId = d[@"audioLanguageId"];
-                media.bucketId = d[@"bucketId"];
-                media.type = d[@"type"];
-                media.extension = d[@"extension"];
-                media.language = language;
-                media.bucketName = d[@"bucketName"];
-                
-                // captions
-                NSMutableSet *captions = [[NSMutableSet alloc] initWithCapacity:[d[@"captions"] count]];
-                for (NSDictionary *d2 in d[@"captions"]) {
-                    // parse captions
-                    Captions *c = [NSEntityDescription insertNewObjectForEntityForName:@"Captions" inManagedObjectContext:context];
-                    c.id = d2[@"id"];
-                    c.caption = d2[@"caption"];
-                    c.mediaId = d2[@"mediaId"];
-                    c.startTime = d2[@"startTime"];
-                    c.endTime = d2[@"endTime"];
-                    c.languageId = d2[@"languageId"];
-                    c.type = d2[@"type"];
-                    c.language = language;
-                    c.media = media;
-                    [captions addObject:c];
-                }
-                media.captions = captions;
-                
-                // popups
-                NSMutableSet *popups = [[NSMutableSet alloc] initWithCapacity:[d[@"popups"] count]];
-                for (NSDictionary *d2 in d[@"popups"]) {
-                    // parse popups
-                    Popups *p = [NSEntityDescription insertNewObjectForEntityForName:@"Popups" inManagedObjectContext:context];
-                    p.displayName = d2[@"displayName"];
-                    p.popupText = d2[@"popupText"];
-                    p.mediaId = d2[@"mediaId"];
-                    p.languageId = d2[@"languageId"];
-                    p.startTime = d2[@"startTime"];
-                    p.endTime = d2[@"endTime"];
-                    p.filename = d2[@"filename"];
-                    p.bucketId = d2[@"bucketId"];
-                    p.filenameInBucket = d2[@"filenameInBucket"];
-                    p.extension = d2[@"extension"];
-                    p.bucketName = d2[@"bucketName"];
-                    p.id = d2[@"id"];
-                    p.language = language;
-                    p.media = media;
-                    
-                    NSMutableSet *subPopups = [[NSMutableSet alloc] initWithCapacity:[d2[@"subPopups"] count]];
-                    for (NSDictionary *d3 in d2[@"subPopups"]) {
-                        SubPopups *s = [NSEntityDescription insertNewObjectForEntityForName:@"SubPopups" inManagedObjectContext:context];
-                        s.bucketId = d2[@"bucketId"];
-                        s.bucketName = d2[@"bucketName"];
-                        s.popupText = d3[@"popupText"];
-                        s.endTime = d3[@"endTime"];
-                        s.startTime = d3[@"startTime"];
-                        s.extension = d3[@"extension"];
-                        s.filename = d3[@"filename"];
-                        s.filenameInBucket = d3[@"filenameInBucket"];
-                        s.id = d3[@"id"];
-                        s.popupId = d3[@"popupId"];
-                        s.popup = p;
-                        [subPopups addObject:s];
+                __block Languages *language = nil;
+                __block NSMutableSet *medias = [[NSMutableSet alloc] initWithCapacity:[jsonArray count]];
+                [jsonArray enumerateObjectsUsingBlock:^(id d, NSUInteger idx, BOOL *stop){
+                    i++;
+                    // language
+                    if (language == nil) {
+                        NSDictionary *lang = d[@"language"];
+                        // parse language
+                        language = [NSEntityDescription insertNewObjectForEntityForName:@"Languages" inManagedObjectContext:context];
+                        language.name = lang[@"name"];
+                        language.code1 = lang[@"code1"];
+                        language.code2 = lang[@"code2"];
+                        language.mtcId = lang[@"mtcId"];
+                        language.id = lang[@"id"];
+                        language.nativeName = lang[@"nativeName"];
                     }
-                    p.subPopups = subPopups;
                     
-                    [popups addObject:p];
-                }
-                media.popups = popups;
-                
-                [medias addObject:media];
+                    // media
+                    // parse media
+                    Medias *media = [NSEntityDescription insertNewObjectForEntityForName:@"Medias" inManagedObjectContext:context];
+                    media.name = d[@"name"];
+                    media.id = d[@"id"];
+                    media.filename = d[@"filename"];
+                    media.filenameInBucket = d[@"filenameInBucket"];
+                    media.audioLanguageId = d[@"audioLanguageId"];
+                    media.bucketId = d[@"bucketId"];
+                    media.type = d[@"type"];
+                    media.extension = d[@"extension"];
+                    media.language = language;
+                    media.bucketName = d[@"bucketName"];
+                    
+                    // captions
+                    NSMutableSet *captions = [[NSMutableSet alloc] initWithCapacity:[d[@"captions"] count]];
+                    for (NSDictionary *d2 in d[@"captions"]) {
+                        // parse captions
+                        Captions *c = [NSEntityDescription insertNewObjectForEntityForName:@"Captions" inManagedObjectContext:context];
+                        c.id = d2[@"id"];
+                        c.caption = d2[@"caption"];
+                        c.mediaId = d2[@"mediaId"];
+                        c.startTime = d2[@"startTime"];
+                        c.endTime = d2[@"endTime"];
+                        c.languageId = d2[@"languageId"];
+                        c.type = d2[@"type"];
+                        c.language = language;
+                        c.media = media;
+                        [captions addObject:c];
+                    }
+                    media.captions = captions;
+                    
+                    // popups
+                    NSMutableSet *popups = [[NSMutableSet alloc] initWithCapacity:[d[@"popups"] count]];
+                    for (NSDictionary *d2 in d[@"popups"]) {
+                        // parse popups
+                        Popups *p = [NSEntityDescription insertNewObjectForEntityForName:@"Popups" inManagedObjectContext:context];
+                        p.displayName = d2[@"displayName"];
+                        p.popupText = d2[@"popupText"];
+                        p.mediaId = d2[@"mediaId"];
+                        p.languageId = d2[@"languageId"];
+                        p.startTime = d2[@"startTime"];
+                        p.endTime = d2[@"endTime"];
+                        p.filename = d2[@"filename"];
+                        p.bucketId = d2[@"bucketId"];
+                        p.filenameInBucket = d2[@"filenameInBucket"];
+                        p.extension = d2[@"extension"];
+                        p.bucketName = d2[@"bucketName"];
+                        p.id = d2[@"id"];
+                        p.language = language;
+                        p.media = media;
+                        
+                        NSMutableSet *subPopups = [[NSMutableSet alloc] initWithCapacity:[d2[@"subPopups"] count]];
+                        for (NSDictionary *d3 in d2[@"subPopups"]) {
+                            SubPopups *s = [NSEntityDescription insertNewObjectForEntityForName:@"SubPopups" inManagedObjectContext:context];
+                            s.bucketId = d2[@"bucketId"];
+                            s.bucketName = d2[@"bucketName"];
+                            s.popupText = d3[@"popupText"];
+                            s.endTime = d3[@"endTime"];
+                            s.startTime = d3[@"startTime"];
+                            s.extension = d3[@"extension"];
+                            s.filename = d3[@"filename"];
+                            s.filenameInBucket = d3[@"filenameInBucket"];
+                            s.id = d3[@"id"];
+                            s.popupId = d3[@"popupId"];
+                            s.popup = p;
+                            [subPopups addObject:s];
+                        }
+                        p.subPopups = subPopups;
+                        
+                        [popups addObject:p];
+                    }
+                    media.popups = popups;
+                    
+                    [medias addObject:media];
+                    
+                    if (![context save:&e]) {
+                        NSLog(@"Whoops, couldn't save: %@, %ld", e, (long)i);
+                    }else
+                        NSLog(@"No errors! Saving complete. %ld", (long)i);
+                }];
+                language.medias = medias;
                 
                 if (![context save:&e]) {
                     NSLog(@"Whoops, couldn't save: %@, %ld", e, (long)i);
                 }else
-                    NSLog(@"No errors! Saving complete. %ld", (long)i);
-            }];
-            language.medias = medias;
-            
-            if (![context save:&e]) {
-                NSLog(@"Whoops, couldn't save: %@, %ld", e, (long)i);
-            }else
-                NSLog(@"No errors! Saving complete. ALL DONE!");
-            
-            
-//            NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-//            NSEntityDescription *entity = [NSEntityDescription entityForName:@"Captions" inManagedObjectContext:context];
-//            
-//            [fetchRequest setEntity:entity];
-//            
-//            // Create the sort descriptors array.
-//            NSSortDescriptor *authorDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES];
-//            NSArray *sortDescriptors = @[authorDescriptor];
-//            [fetchRequest setSortDescriptors:sortDescriptors];
-//            
-//            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"name like '%'"];
-//            [fetchRequest setPredicate:predicate];
-//            // Create and initialize the fetch results controller.
-//            NSFetchedResultsController * fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:@"Root"];// nil was @"author"
-//           
-//            NSLog(@"%ld", (long)[fetchedResultsController.fetchedObjects count]);
-            
-            
-            // finished
+                    NSLog(@"No errors! Saving complete. ALL DONE!");
+                
+                
+                //            NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+                //            NSEntityDescription *entity = [NSEntityDescription entityForName:@"Captions" inManagedObjectContext:context];
+                //
+                //            [fetchRequest setEntity:entity];
+                //
+                //            // Create the sort descriptors array.
+                //            NSSortDescriptor *authorDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES];
+                //            NSArray *sortDescriptors = @[authorDescriptor];
+                //            [fetchRequest setSortDescriptors:sortDescriptors];
+                //
+                //            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"name like '%'"];
+                //            [fetchRequest setPredicate:predicate];
+                //            // Create and initialize the fetch results controller.
+                //            NSFetchedResultsController * fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:@"Root"];// nil was @"author"
+                //
+                //            NSLog(@"%ld", (long)[fetchedResultsController.fetchedObjects count]);
+                
+                
+                // finished
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
                 [delegate performSelector:successSelector];
 #pragma clang diagnostic pop
-        }else
-            NSLog(@"cannot send list to delegate: %@, doesnt repond to the specified successSelector: %@", NSStringFromClass([delegate class]), NSStringFromSelector(successSelector));
+            }else
+                NSLog(@"cannot send list to delegate: %@, doesnt repond to the specified successSelector: %@", NSStringFromClass([delegate class]), NSStringFromSelector(successSelector));
+            
+            cleanUp();
+        };
         
-        cleanUp();
-    };
-
-    
-    [self genericGetFunctionForDelegate:delegate forUrl:url requestType:normal success:success error:[self errorTemplateForDelegate:delegate selectorOnError:@selector(errorGettingMedias)] then:nil];
+        
+        [self genericGetFunctionForDelegate:delegate forUrl:url requestType:normal success:success error:[self errorTemplateForDelegate:delegate selectorOnError:@selector(errorGettingMedias)] then:nil];
+    }else{
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [delegate performSelector:successSelector];
+#pragma clang diagnostic pop
+    }
 }
 
 - (void) deleteAllObjectsWithEntityDescription: (NSString *) entityDescription context:(NSManagedObjectContext *)context {
