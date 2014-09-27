@@ -254,17 +254,11 @@ enum{
                     
                     [medias addObject:media];
                     
-                    if (![context save:&e]) {
-                        NSLog(@"Whoops, couldn't save: %@, %ld", e, (long)i);
-                    }else
-                        NSLog(@"No errors! Saving complete. %ld", (long)i);
+                    [CoreDataTemplates saveContext:context sender:self];
                 }];
                 language.medias = medias;
                 
-                if (![context save:&e]) {
-                    NSLog(@"Whoops, couldn't save: %@, %ld", e, (long)i);
-                }else
-                    NSLog(@"No errors! Saving complete. ALL DONE!");
+                [CoreDataTemplates saveContext:context sender:self];
                 
                 
                 //            NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];

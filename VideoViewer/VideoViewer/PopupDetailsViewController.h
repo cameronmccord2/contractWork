@@ -40,6 +40,8 @@
 @property(nonatomic, strong)NSPredicate *predicate;
 @property(nonatomic, strong)NSMutableDictionary *variablesDictionary;
 
+@property(nonatomic, strong)SubPopups *currentSubPopup;
+
 -(instancetype)initWithPopup:(Popups *)popup context:(NSManagedObjectContext *)context;
 -(void)setWillReturnDelegate:(id<PopupDetailsViewControllerDelegate>)delegate;
 

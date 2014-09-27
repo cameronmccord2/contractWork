@@ -28,6 +28,9 @@
 		E45F41B11901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = E45F41A01901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 */; };
 		E45F41C31905A7BD009D21D7 /* pause.png in Resources */ = {isa = PBXBuildFile; fileRef = E45F41C11905A7BD009D21D7 /* pause.png */; };
 		E45F41C41905A7BD009D21D7 /* play.png in Resources */ = {isa = PBXBuildFile; fileRef = E45F41C21905A7BD009D21D7 /* play.png */; };
+		E4625C6C19D624E6003C416A /* CoreDataTemplates.m in Sources */ = {isa = PBXBuildFile; fileRef = E4625C6B19D624E6003C416A /* CoreDataTemplates.m */; };
+		E474D8DF1938050700B4DE14 /* HighlightButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E474D8DE1938050700B4DE14 /* HighlightButton.m */; };
+		E474D8E119381D2E00B4DE14 /* libGoogleAnalyticsServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E474D8E019381D2E00B4DE14 /* libGoogleAnalyticsServices.a */; };
 		E4BB3421191EB59E000D5772 /* SubPopups.m in Sources */ = {isa = PBXBuildFile; fileRef = E4BB3420191EB59E000D5772 /* SubPopups.m */; };
 		E4BB3424191EB59E000D5772 /* Medias.m in Sources */ = {isa = PBXBuildFile; fileRef = E4BB3423191EB59E000D5772 /* Medias.m */; };
 		E4BB3427191EB59E000D5772 /* Captions.m in Sources */ = {isa = PBXBuildFile; fileRef = E4BB3426191EB59E000D5772 /* Captions.m */; };
@@ -101,6 +104,11 @@
 		E45F41A01901F90C009D21D7 /* ufdof2ju9i5lrg00clgq1s7v56.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = ufdof2ju9i5lrg00clgq1s7v56.mp4; sourceTree = "<group>"; };
 		E45F41C11905A7BD009D21D7 /* pause.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pause.png; path = "Good Images/pause.png"; sourceTree = "<group>"; };
 		E45F41C21905A7BD009D21D7 /* play.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = play.png; path = "Good Images/play.png"; sourceTree = "<group>"; };
+		E4625C6A19D624E6003C416A /* CoreDataTemplates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreDataTemplates.h; path = "../../../../../../MTC stuff/VPPlusBook/VPPlusBook/CoreDataTemplates.h"; sourceTree = "<group>"; };
+		E4625C6B19D624E6003C416A /* CoreDataTemplates.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CoreDataTemplates.m; path = "../../../../../../MTC stuff/VPPlusBook/VPPlusBook/CoreDataTemplates.m"; sourceTree = "<group>"; };
+		E474D8DD1938050700B4DE14 /* HighlightButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HighlightButton.h; sourceTree = "<group>"; };
+		E474D8DE1938050700B4DE14 /* HighlightButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HighlightButton.m; sourceTree = "<group>"; };
+		E474D8E019381D2E00B4DE14 /* libGoogleAnalyticsServices.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libGoogleAnalyticsServices.a; sourceTree = "<group>"; };
 		E4BB341F191EB59E000D5772 /* SubPopups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubPopups.h; sourceTree = "<group>"; };
 		E4BB3420191EB59E000D5772 /* SubPopups.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SubPopups.m; sourceTree = "<group>"; };
 		E4BB3422191EB59E000D5772 /* Medias.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Medias.h; sourceTree = "<group>"; };
@@ -166,6 +174,7 @@
 				E45F418019009F68009D21D7 /* AVFoundation.framework in Frameworks */,
 				E4D5606918FFB22300263AC4 /* MediaPlayer.framework in Frameworks */,
 				E4DDCFA118FF983D002688E9 /* CoreGraphics.framework in Frameworks */,
+				E474D8E119381D2E00B4DE14 /* libGoogleAnalyticsServices.a in Frameworks */,
 				E4DDCFA518FF983D002688E9 /* CoreData.framework in Frameworks */,
 				E4DDCFA318FF983D002688E9 /* UIKit.framework in Frameworks */,
 				E4DDCF9F18FF983D002688E9 /* Foundation.framework in Frameworks */,
@@ -247,6 +256,8 @@
 		E4D5607F18FFB3CC00263AC4 /* Extra classes */ = {
 			isa = PBXGroup;
 			children = (
+				E4625C6A19D624E6003C416A /* CoreDataTemplates.h */,
+				E4625C6B19D624E6003C416A /* CoreDataTemplates.m */,
 				E4D5606A18FFB3B700263AC4 /* CallQueue.h */,
 				E4D5606B18FFB3B700263AC4 /* CallQueue.m */,
 				E4D5607018FFB3B700263AC4 /* NSStringAdditions.h */,
@@ -321,6 +332,8 @@
 				E4DDCFB218FF983D002688E9 /* VideoViewer.xcdatamodeld */,
 				E4D5606518FFAF4D00263AC4 /* VideoPlayerViewController.h */,
 				E4D5606618FFAF4D00263AC4 /* VideoPlayerViewController.m */,
+				E474D8DD1938050700B4DE14 /* HighlightButton.h */,
+				E474D8DE1938050700B4DE14 /* HighlightButton.m */,
 				E45F417C19009C3C009D21D7 /* PopupDetailsViewController.h */,
 				E45F417D19009C3C009D21D7 /* PopupDetailsViewController.m */,
 				E4DDCFA718FF983D002688E9 /* Supporting Files */,
@@ -331,6 +344,7 @@
 		E4DDCFA718FF983D002688E9 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				E474D8E019381D2E00B4DE14 /* libGoogleAnalyticsServices.a */,
 				E4DDCFA818FF983D002688E9 /* VideoViewer-Info.plist */,
 				E4DDCFA918FF983D002688E9 /* InfoPlist.strings */,
 				E4DDCFAC18FF983D002688E9 /* main.m */,
@@ -496,7 +510,9 @@
 				E4BB342A191EB59E000D5772 /* Languages.m in Sources */,
 				E4D5607918FFB3B700263AC4 /* DAOManager.m in Sources */,
 				E4D5607818FFB3B700263AC4 /* CallQueue.m in Sources */,
+				E474D8DF1938050700B4DE14 /* HighlightButton.m in Sources */,
 				E4BB342D191EB59E000D5772 /* Popups.m in Sources */,
+				E4625C6C19D624E6003C416A /* CoreDataTemplates.m in Sources */,
 				E4DDCFAD18FF983D002688E9 /* main.m in Sources */,
 				E4D5606718FFAF4D00263AC4 /* VideoPlayerViewController.m in Sources */,
 				E4D5605118FF9A1100263AC4 /* VideoListTableViewController.m in Sources */,
@@ -623,6 +639,10 @@
 				GCC_PREFIX_HEADER = "VideoViewer/VideoViewer-Prefix.pch";
 				INFOPLIST_FILE = "VideoViewer/VideoViewer-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/VideoViewer",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -638,6 +658,10 @@
 				GCC_PREFIX_HEADER = "VideoViewer/VideoViewer-Prefix.pch";
 				INFOPLIST_FILE = "VideoViewer/VideoViewer-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/VideoViewer",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

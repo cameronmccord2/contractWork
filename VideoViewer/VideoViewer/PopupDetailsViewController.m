@@ -91,13 +91,13 @@
     self.slider.maximumValue = self.player.duration;
     [self.slider addTarget:self action:@selector(seekTime:) forControlEvents:UIControlEventValueChanged];
     
-    self.playPauseButton = [[UIButton alloc] initWithFrame:CGRectMake(60, 5, 30, 30)];
+    
+    self.playPauseButton = [[UIButton alloc] initWithFrame:[self getPlayPauseButtonFrame]];
     [self.playPauseButton setImage:[UIImage imageNamed:@"pause.png"] forState:UIControlStateNormal];
     [self.playPauseButton addTarget:self action:@selector(playPauseButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
     
     
     self.sliderBackground = [[UIView alloc] initWithFrame:[self getSliderBackgroundFrame]];
-    NSLog(@"y: %f", self.sliderBackground.frame.origin.y);
     [self.sliderBackground setBackgroundColor:[UIColor whiteColor]];
     
     [self.sliderBackground addSubview:self.playPauseButton];
@@ -122,36 +122,31 @@
                                                         documentAttributes:nil error:nil];
 }
 
--(CGRect)getLabelFrameForText:(NSString *)text width:(float)width{
-    NSAttributedString *ats = [self getAttributedStringForText:text];
+-(CGRect)getLabelFrameForText:(NSString *)text width:(float)width font:(UIFont *)font{
+    NSDictionary *attributesDictionary = [[NSDictionary alloc] init];
+    
+    if(font)
+        attributesDictionary = [NSDictionary dictionaryWithObjectsAndKeys:font, NSFontAttributeName, nil];
+    
+    NSMutableAttributedString *ats = [[self getAttributedStringForText:text] mutableCopy];
+    
+    [ats addAttributes:@{NSFontAttributeName: font} range:NSMakeRange(0, ats.length)];
+    
     return [ats boundingRectWithSize:CGSizeMake(width, 10000.0f) options:(NSStringDrawingUsesFontLeading | NSStringDrawingUsesLineFragmentOrigin) context:nil];
 }
 
 - (void) orientationChanged:(NSNotification *)note{
-    NSLog(@"fixing");
     [self fixSliderBackground];
-    [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText width:[self screenWidth]]];
+    [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText width:[self screenWidth] font:[self getDescriptionLabelFont]]];
     [self.descriptionLabel setFrame:CGRectMake(10, 66, self.descriptionLabel.frame.size.width - 20, self.descriptionLabel.frame.size.height + 30)];
-    //    NSLog(@"new thing");
-//    UIDevice * device = note.object;
-//    switch(device.orientation){
-    
-//        case UIDeviceOrientationPortrait:
-//        case UIDeviceOrientationPortraitUpsideDown:// move popups up or down depending on where they currently are and where they need to be when it rotates
-//        case UIDeviceOrientationLandscapeLeft:
-//        case UIDeviceOrientationLandscapeRight:
-//            [self.scrollView setContentSize:[self getScrollViewContentSize]];
-//            [self.scrollView setFrame:[self getScrollViewFrame]];
-//            [self.scrollView setContentInset:[self getScrollViewContentInsets]];
-//            [self.slider setFrame:[self getSliderFrame]];
-//            [self fixScrollViewWidth];
-//            [self.descriptionLabel setFrame:[self getLabelFrameForText:self.popup.popupText]];
-//            break;
-//            
-//        default:
-//            break;
-//    };
-//    [self buildView];
+    [self.slider setFrame:[self getSliderFrame]];
+    [self.playPauseButton setFrame:[self getPlayPauseButtonFrame]];
+    if(self.currentSubPopup != nil)
+        [self setupDescriptionLabelForSubPopup:self.currentSubPopup];
+}
+
+-(UIFont *)getDescriptionLabelFont{
+    return [UIFont systemFontOfSize:18.0];
 }
 
 -(void)fixScrollViewWidth{
@@ -189,6 +184,11 @@
     return CGRectMake(0, [self screenHeight] - height, [self screenWidth], height);
 }
 
+-(CGRect)getPlayPauseButtonFrame{
+    CGRect sliderFrame = [self getSliderFrame];
+    return CGRectMake(sliderFrame.origin.x - 35, 5, 30, 30);
+}
+
 -(CGRect)getScrollViewFrameWithImage{
     NSInteger adjustment = 62;
     if([self isLandscape])
@@ -212,8 +212,8 @@
 -(CGRect)getSliderFrame{// 20 up from the bottom of the view
     NSInteger height = 20;
     NSInteger yValue = 10;
-    NSInteger leftPad = 100;
-    NSInteger width = ([self view].frame.size.width - leftPad) / 2.0f;
+    NSInteger leftPad = 50;
+    NSInteger width = ([self screenWidth] - leftPad * 2);
     return CGRectMake(leftPad, yValue, width, height);
 }
 
@@ -247,6 +247,7 @@
 
 - (IBAction)seekTime:(id)sender {
     self.player.currentTime = self.slider.value;
+    
 }
 
 -(void)updateSubPopupWithLongTime:(float)currentTime{
@@ -271,48 +272,53 @@
     if ([self.fetchedResultsController.fetchedObjects count] > 0) {
         
         for (SubPopups *sub in [self.fetchedResultsController fetchedObjects]) {
-            if(self.descriptionLabel != nil)
-                [self.descriptionLabel removeFromSuperview];
-            
-            float labelWidth = [self getLabelWidthNoImage];
-            int labelTopPad = 10;
-            
-            if(self.imageView != nil){
-                [self.imageView removeFromSuperview];
-                self.imageView = nil;
-            }
-            
-            if(sub.filenameInBucket != nil){
-//                NSLog(@"filenameinbucket: %@", sub.filenameInBucket);
-                self.imageView = [[UIImageView alloc] initWithFrame:[self getImageFrame]];
-                [self.imageView setBackgroundColor:[UIColor whiteColor]];
-                [self.scrollView addSubview:self.imageView];
-                [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
-                labelWidth = [self screenWidth] / 2;
-                [self.scrollView setFrame:[self getScrollViewFrameWithImage]];
-                labelWidth = [self getLabelWidthWithImage];
-            }else
-                [self.scrollView setFrame:[self getScrollViewFrameNoImage]];
-            
-            NSString *subPopupText = sub.popupText;
-//            subPopupText = [self multiplyString:subPopupText times:1000];
-            self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:subPopupText width:labelWidth]];
-            [self.descriptionLabel setNumberOfLines:0];
-            self.descriptionLabel.tag = [sub.id integerValue];
-            
-            [self.descriptionLabel setFrame:CGRectMake(10, labelTopPad, labelWidth, self.descriptionLabel.frame.size.height + 30)];
-            
-            [self.descriptionLabel setAttributedText:[self getAttributedStringForText:subPopupText]];
-            [self.descriptionLabel setFont:[UIFont systemFontOfSize:18.0]];
-//            NSLog(@"text y: %ld", (long)self.descriptionLabel.frame.origin.y);
-//            [self.view addSubview:self.descriptionLabel];
-            [self.scrollView addSubview:self.descriptionLabel];
-            [self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, self.descriptionLabel.frame.size.height + labelTopPad)];
-            
-            // do scroll view and content height?
+            self.currentSubPopup = sub;
+            [self setupDescriptionLabelForSubPopup:sub];
         }
     }
     self.fetchedResultsController = nil;
+}
+
+-(void)setupDescriptionLabelForSubPopup:(SubPopups *)sub{
+    if(self.descriptionLabel != nil)
+        [self.descriptionLabel removeFromSuperview];
+    
+    float labelWidth = [self getLabelWidthNoImage];
+    int labelTopPad = 10;
+    
+    if(self.imageView != nil){
+        [self.imageView removeFromSuperview];
+        self.imageView = nil;
+    }
+    
+    if(sub.filenameInBucket != nil){
+        //                NSLog(@"filenameinbucket: %@", sub.filenameInBucket);
+        self.imageView = [[UIImageView alloc] initWithFrame:[self getImageFrame]];
+        [self.imageView setBackgroundColor:[UIColor whiteColor]];
+        [self.scrollView addSubview:self.imageView];
+        [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
+        labelWidth = [self screenWidth] / 2;
+        [self.scrollView setFrame:[self getScrollViewFrameWithImage]];
+        labelWidth = [self getLabelWidthWithImage];
+    }else
+        [self.scrollView setFrame:[self getScrollViewFrameNoImage]];
+    
+    NSString *subPopupText = sub.popupText;
+    
+    self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:subPopupText width:labelWidth font:[self getDescriptionLabelFont]]];
+    [self.descriptionLabel setNumberOfLines:0];
+    self.descriptionLabel.tag = [sub.id integerValue];
+    
+    [self.descriptionLabel setFrame:CGRectMake(10, labelTopPad, labelWidth, self.descriptionLabel.frame.size.height + 30)];
+    
+    NSMutableAttributedString *ats = [[self getAttributedStringForText:subPopupText] mutableCopy];
+    [ats addAttributes:@{NSFontAttributeName: [self getDescriptionLabelFont]} range:NSMakeRange(0, ats.length)];
+    [self.descriptionLabel setAttributedText:ats];
+    
+    [self.scrollView addSubview:self.descriptionLabel];
+    [self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, self.descriptionLabel.frame.size.height + labelTopPad)];
+    
+    // do scroll view and content height?
 }
 
 -(NSString *)multiplyString:(NSString *)str times:(int)times{

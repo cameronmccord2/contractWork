@@ -14,4 +14,19 @@
     #import <UIKit/UIKit.h>
     #import <Foundation/Foundation.h>
     #import <CoreData/CoreData.h>
+    #import "CoreDataTemplates.h"
 #endif
+
+//#ifdef DEBUG
+//#   define DLog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)// timestamp
+#define DLog(fmt, ...) CFShow((__bridge CFStringRef)[NSString stringWithFormat:(@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__,## __VA_ARGS__]);// no timestamp
+
+//#else
+//#   define DLog(...)
+//#endif
+
+// ALog always displays output regardless of the DEBUG setting
+#define ALog(fmt, ...) CFShow((__bridge CFStringRef)[NSString stringWithFormat:(@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__,## __VA_ARGS__]);// no timestamp
+//#define ALog(fmt, ...) NSLog((@"%s [Line %d] " fmt), __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)// timestamp
+
+#define DEPRECATED __attribute__ ((deprecated))
