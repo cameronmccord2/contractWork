@@ -7,34 +7,43 @@
 //
 
 #import "VideoListTableViewController.h"
-#import "Medias.h"
+#import "Medias+Extras.h"
 #import "VideoPlayerViewController.h"
+#import "Files+Extras.h"
+#import "Languages+Extras.h"
+#import "Medias+Extras.h"
+#import "VPDaoV1.h"
+#import "NSDictionary+SafeJson.h"
+#import "UIColor+AppColors.h"
 
+NSString *DATAFILE_FILENAME = @"trainerV0";
 
 @interface VideoListTableViewController ()
 
 @end
 
-@implementation VideoListTableViewController
+@implementation VideoListTableViewController{
+    NSArray *medias;
+    NSManagedObjectContext *context;
+}
 
--(instancetype)initWithContext:(NSManagedObjectContext *)context{
+-(instancetype)initWithContext:(NSManagedObjectContext *)managedObjectContext{
     self = [super initWithStyle:UITableViewStylePlain];
     if (self) {
-        self.managedObjectContext = context;
+        context = managedObjectContext;
+        [self doUpgradeIfNeeded];
+        NSError *error = nil;
+        medias = [CoreDataTemplates getListForEntity:@"Medias" withPredicate:nil forContext:context error:&error];
+        if (error) {
+            DLog(@"error getting medias: %@", error);
+            medias = [NSArray new];// so it doesn't break everything
+        }
     }
     return self;
 }
 
 - (void)viewDidLoad{
     [super viewDidLoad];
-    [[VPDaoV1 sharedManager] getMedias:self forContext:self.managedObjectContext reload:NO];
-
-    
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
-    
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 }
 
 - (void)didReceiveMemoryWarning{
@@ -42,104 +51,109 @@
     // Dispose of any resources that can be recreated.
 }
 
-#pragma mark - Delegate methods
+-(void)doUpgradeIfNeeded {
+    // delete the old data
+    NSData *data = [NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:DATAFILE_FILENAME ofType:@"json"]];
+    if(data != nil){
+        
+        Files *file = [Files getFileForRemoteUrl:DATAFILE_FILENAME fromContext:context];// used to keep track of which update files have been ran
 
--(void)gotMedias{
-    [self reloadData];
-}
+        if (file == nil) {
+            [CoreDataTemplates deleteAllObjectsWithEntityDescription:@"Captions" context:context];
+            [CoreDataTemplates deleteAllObjectsWithEntityDescription:@"SubPopups" context:context];
+            [CoreDataTemplates deleteAllObjectsWithEntityDescription:@"Popups" context:context];
+            [CoreDataTemplates deleteAllObjectsWithEntityDescription:@"Medias" context:context];
+            [CoreDataTemplates deleteAllObjectsWithEntityDescription:@"Languages" context:context];
+            file = [Files newFileForRemoteFilename:DATAFILE_FILENAME type:FileTypeFromMTC inContext:context];
+        }
+        
+        if(![file.loadStatus isEqualToString:LoadStatusDownloaded]){
+        
+            NSError *e = nil;
+            NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&e];
+            
+            if (e != nil) {
+                [[VPDaoV1 sharedManager] doJsonError:data error:e];
+            }else {
 
--(void)reloadData{
-    NSError *error = nil;
-    if (![[self fetchedResultsController] performFetch:&error]) {
-        NSLog(@"Error fetching results: %@, %@", error, [error userInfo]);
-        exit(-1);// fail
+                [jsonArray enumerateObjectsUsingBlock:^(id d, NSUInteger idx, BOOL *stop){
+
+                    NSDictionary *lang = d[@"language"];
+                    d = [d removeNullValues];
+                    Languages *language = [Languages parseLanguageFromDictionary:lang intoContext:context];
+                    
+                    // media
+                    Medias *media = [Medias parseMediaFromDictionary:d forLanguage:language intoContext:context];
+                    
+                    [language addMediasObject:media];
+                    
+                    [CoreDataTemplates saveContext:context sender:self];
+                }];
+                
+                [CoreDataTemplates saveContext:context sender:self];
+            }
+            
+            [[VPDaoV1 sharedManager] setLoadStatus:LoadStatusDownloaded forLoadProperties:file];
+            [[VPDaoV1 sharedManager] getFilesThatDontExistForDelegate:self inContext:context];
+        }
     }
-    [[self tableView] reloadData];
 }
 
--(void)errorGettingMedias{
-    self.alert = [[UIAlertView alloc] initWithTitle:@"Error" message:@"There was an error getting medias" delegate:self cancelButtonTitle:nil otherButtonTitles:@"OK", nil];
-}
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.tableView reloadData];
+    
+    Medias *media = [medias firstObject];
+    if(media)
+        [self.navigationItem setTitle:[NSString stringWithFormat:@"%@ Videos", media.language.name]];
+    self.navigationController.navigationBar.barTintColor = [UIColor flagGreen];
+    self.navigationController.navigationBar.alpha = 1.0f;
+    self.navigationController.navigationBar.translucent = YES;
 
--(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
-    [self.alert dismissWithClickedButtonIndex:buttonIndex animated:YES];
+    NSDictionary *attrs = @{NSFontAttributeName:[UIFont systemFontOfSize:22.0f]};
+    [[UINavigationBar appearance] setTitleTextAttributes:attrs];
+    
+    [self.tableView setBackgroundColor:[UIColor lightBlue]];
 }
 
 #pragma mark - Table view data source
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    Medias *media = [self.fetchedResultsController objectAtIndexPath:indexPath];
-    VideoPlayerViewController *vpvc = [[VideoPlayerViewController alloc] initWithContext:self.managedObjectContext media:media];
+    Medias *media = [medias objectAtIndex:[indexPath row]];
+    VideoPlayerViewController *vpvc = [[VideoPlayerViewController alloc] initWithContext:context media:media];
     [[self navigationController] pushViewController:vpvc animated:YES];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-//    return [[self.fetchedResultsController sections] count];
     return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return [self.fetchedResultsController.fetchedObjects count];
+    return [medias count];
 }
 
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 75.0f;
+}
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"myCell"];
-    if (cell == nil)
+    if (cell == nil){
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"myCell"];
+        [cell setBackgroundColor:[UIColor lightBlue]];
+//        UILabel *cellTitleLabel = [UILabel new];
+
+    }
     
     [self configureCell:cell atIndexPath:indexPath];
     return cell;
 }
 
 - (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
-    
-    // Configure the cell to show the book's title
-    Medias *media = [self.fetchedResultsController objectAtIndexPath:indexPath];
+    Medias *media = [medias objectAtIndex:[indexPath row]];
     cell.textLabel.text = media.name;
-}
-
-
-
-
-
--(NSFetchedResultsController *)fetchedResultsController {
-    if (_fetchedResultsController != nil) {
-        return _fetchedResultsController;
-    }
-    
-    // Create and configure a fetch request with the Book entity.
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Medias" inManagedObjectContext:self.managedObjectContext];
-    
-    [fetchRequest setEntity:entity];
-    
-    // Create the sort descriptors array.
-    NSSortDescriptor *authorDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES];
-    NSArray *sortDescriptors = @[authorDescriptor];
-    [fetchRequest setSortDescriptors:sortDescriptors];
-    [fetchRequest setFetchBatchSize:20];
-    // Create and initialize the fetch results controller.
-    
-    _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:@"Root"];// nil was @"author"
-    _fetchedResultsController.delegate = self;
-    
-//    NSFetchRequest *req = [[NSFetchRequest alloc] init];
-//    [req setPredicate:[NSPredicate predicateWithFormat:@"id == 1048"]];
-//    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Medias" inManagedObjectContext:_managedObjectContext];
-//    [req setEntity:entity];
-//    NSSortDescriptor *sort = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES];
-//    [req setSortDescriptors:[NSArray arrayWithObject:sort]];
-//    [req setFetchBatchSize:20];
-//    
-//    NSFetchedResultsController *theFetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:req managedObjectContext:_managedObjectContext sectionNameKeyPath:nil cacheName:nil];
-//    self.fetchedResultsController = theFetchedResultsController;
-//    _fetchedResultsController.delegate = self;
-//    
-    return _fetchedResultsController;
-    
-//    return _fetchedResultsController;
+    [cell.textLabel setFont:[UIFont systemFontOfSize:30.0f]];
 }
 
 @end

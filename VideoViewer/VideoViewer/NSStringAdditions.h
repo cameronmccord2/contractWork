@@ -12,6 +12,5 @@
 
 - (NSURL *)URLByAppendingQueryStringKey:(NSString *)queryStringKey value:(NSString *)queryStringValue;
 - (NSString *)URLStringByAppendingQueryStringKey:(NSString *)queryStringKey value:(NSString *)queryStringValue;
-- (CGFloat)widthWithFont:(UIFont *)font;
-- (CGFloat)heightWithWidth:(CGFloat)width andFont:(UIFont *)font;
+
 @end

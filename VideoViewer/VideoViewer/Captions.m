@@ -2,7 +2,7 @@
 //  Captions.m
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
@@ -15,7 +15,7 @@
 
 @dynamic caption;
 @dynamic endTime;
-@dynamic id;
+@dynamic captionId;
 @dynamic languageId;
 @dynamic mediaId;
 @dynamic startTime;

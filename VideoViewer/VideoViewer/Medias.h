@@ -2,24 +2,20 @@
 //  Medias.h
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "AwsFile.h"
 
 @class Captions, Languages, Popups;
 
-@interface Medias : NSManagedObject
+@interface Medias : AwsFile
 
 @property (nonatomic, retain) NSNumber * audioLanguageId;
-@property (nonatomic, retain) NSNumber * bucketId;
-@property (nonatomic, retain) NSString * bucketName;
-@property (nonatomic, retain) NSString * extension;
-@property (nonatomic, retain) NSString * filename;
-@property (nonatomic, retain) NSString * filenameInBucket;
-@property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSNumber * mediaId;
 @property (nonatomic, retain) NSString * name;
 @property (nonatomic, retain) NSNumber * type;
 @property (nonatomic, retain) NSSet *captions;

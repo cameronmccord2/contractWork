@@ -11,10 +11,11 @@
 
 @implementation CallQueue
 
-+(instancetype)initWithRequest:(NSMutableURLRequest *)request authDelegate:(id<DAOManagerDelegateProtocol>)authDelegate requestType:(NSInteger)type success:(void (^)(NSData *, void(^)()))success error:(void (^)(NSData *, NSError *, void(^)()))error then:(void (^)(NSData *, NSURLConnectionWithExtras *, NSProgress *))then{
++(instancetype)queueItemWithRequest:(NSMutableURLRequest *)request delegate:(id)delegate authDelegate:(id<ShowAuthModalDelegateProtocol>)authDelegate requestType:(NSInteger)type success:(void (^)(NSData *, void(^)()))success error:(void (^)(NSData *, NSError *, void(^)()))error then:(void (^)(NSData *, NSURLConnectionWithExtras *, NSProgress *))then{
     CallQueue *item = [[CallQueue alloc] init];
     item.request = request;
-    item.delegate = authDelegate;
+    item.authDelegate = authDelegate;
+	item.delegate = delegate;
     item.success = success;
     item.error = error;
     item.then = then;

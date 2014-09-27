@@ -8,10 +8,12 @@
 
 #import "DAOManager.h"
 
-
-@implementation DAOManager
+@implementation DAOManager{
+    NSString *networkErrorMessage;
+}
 // implement:
 // {cache:true}
+// endpoint doesn't require oauth
 
 
 +(DAOManager *)sharedManager{
@@ -27,8 +29,8 @@
 -(id)init{
     self = [super init];
     if (self) {
-        self.error = @"";
         callQueue = [[NSMutableArray alloc] init];
+        blockingRequestRunning = false;
         dataFromConnectionByTag = [[NSMutableDictionary alloc] init];
         connections = [[NSMutableDictionary alloc] init];
         connectionNumber = [NSDecimalNumber zero];
@@ -36,16 +38,56 @@
     return self;
 }
 
-enum{
-    Junk = 0, ConfirmUserType = 1, StoreType = 5, NormalType = 9
-};
-
 -(NSDecimalNumber *)getConnectionNumber{
     connectionNumber = [connectionNumber decimalNumberByAdding:[NSDecimalNumber one]];
     return connectionNumber;
 }
 
 
+#pragma mark - Utilities
+
+-(void)incrementNetworkActivity{
+    self.networkActivityCounter++;
+    if (self.networkActivityCounter == 1) {
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
+    }
+}
+
+-(void)decrementNetworkActivity{
+    self.networkActivityCounter--;
+    if (self.networkActivityCounter == 0) {
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+    }
+    assert(self.networkActivityCounter > -1);
+}
+
+-(void)callSelector:(SEL)selector onDelegate:(id)delegate{
+    [self callSelector:selector onDelegate:delegate withObject:NULL];
+}
+
+-(void)callSelector:(SEL)selector onDelegate:(id)delegate withObject:(id)object {
+    if (delegate == nil) {
+        //		DLog(@"Delegate is null, do nothing");
+        return;
+    }
+    if (selector == nil) {
+        DLog(@"callselectorWithObject selector: %@ is null, why call this with a null selector? Doing nothing.", NSStringFromSelector(selector));
+        return;
+    }
+    if ([delegate respondsToSelector:selector]) {
+        //		DLog(@"%@ responds to selector, %@", NSStringFromClass([delegate class]), NSStringFromSelector(selector));
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        if (object == NULL) {// NULL is passed only from callSelector:OnDelegate: so if object is nil then we must want to pass nil
+            [delegate performSelector:selector];
+        }else{
+            [delegate performSelector:selector withObject:object];
+        }
+#pragma clang diagnostic pop
+    }else{
+        DLog(@"cannot send delegate %@ selector: %@", NSStringFromClass([delegate class]), NSStringFromSelector(selector));
+    }
+}
 
 #pragma mark - Block Templates
 
@@ -53,45 +95,30 @@ enum{
     
     void(^error)(NSData *, NSError *, void(^)()) = ^void(NSData *data, NSError *error, void(^cleanUp)()){
         if (error == nil) {
-            NSLog(@"error was nil in error template, this shouldnt ever happen");
+            DLog(@"error was nil in error template, this shouldnt ever happen");
         }
         if (errorSelector == nil) {
-            NSLog(@"There was no error selector specified for delegate: %@. This error template function doesn't do anything without a selector.", delegate);
+            DLog(@"There was no error selector specified for delegate: %@. This error template function doesn't do anything without a selector.", delegate);
             return;
         }
         
-        if ([delegate respondsToSelector:errorSelector]) {
-            NSLog(@"responds to selector %@", NSStringFromSelector(errorSelector));
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-            [delegate performSelector:errorSelector withObject:data withObject:error];
-#pragma clang diagnostic pop
-        }else
-            NSLog(@"cannot send selector: %@ to delegate %@", NSStringFromSelector(errorSelector), NSStringFromClass([delegate class]));
+        [self callSelector:errorSelector onDelegate:delegate];
         cleanUp();
     };
     return error;
 }
 
-
 -(void (^)(NSData *, NSURLConnectionWithExtras *, NSProgress *))thenTemplateForDelegate:(id)delegate selectorOnThen:(SEL)thenSelector{
     void(^then)(NSData *, NSURLConnectionWithExtras *, NSProgress *) = ^void(NSData *data, NSURLConnectionWithExtras *connection, NSProgress *nsProgress){
         if (delegate == nil) {
-            NSLog(@"delegate is nil in thenTemplateForDelegate, dont do anything");
+            DLog(@"delegate is nil in thenTemplateForDelegate, dont do anything");
             return;
         }
         if (thenSelector == nil) {
-            NSLog(@"There was no then selector specified for the delegate: %@. This then template function doesn't do anything without a selector", NSStringFromClass([delegate class]));
+            DLog(@"There was no then selector specified for the delegate: %@. This then template function doesn't do anything without a selector", NSStringFromClass([delegate class]));
             return;
         }
-        if ([delegate respondsToSelector:thenSelector]) {
-//            NSLog(@"responds to then selector: %@", NSStringFromSelector(thenSelector));
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-            [delegate performSelector:thenSelector withObject:connection withObject:nsProgress];
-#pragma clang diagnostic pop
-        }else
-            NSLog(@"Delegate %@ can't respond to the then selector: %@. The then selector needs to accept an %@ and %@", NSStringFromClass([delegate class]), NSStringFromSelector(thenSelector), NSStringFromClass([connection class]), NSStringFromClass([nsProgress class]));
+        [self callSelector:thenSelector onDelegate:delegate];
     };
     return then;
 }
@@ -105,103 +132,48 @@ enum{
         NSError *e = nil;
         if (resultIsArray) {
             NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&e];
-//            NSLog(@"got Array");
-//            NSLog(@"%@", jsonArray);
+            //            NSLog(@"got Array");
+            //            NSLog(@"%@", jsonArray);
             if (e != nil) {
                 [self doJsonError:data error:e];
             }else if ([delegate respondsToSelector:successSelector]) {
-                NSLog(@"responds to success selector: %@", NSStringFromSelector(successSelector));
+                //                DLog(@"responds to success selector: %@", NSStringFromSelector(successSelector));
                 if ([parseClass respondsToSelector:parseJsonArraySelector]) {
-//                    NSLog(@"parseClass responds to selector: %@", NSStringFromSelector(parseJsonArraySelector));
+                    //                    NSLog(@"parseClass responds to selector: %@", NSStringFromSelector(parseJsonArraySelector));
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
                     NSArray *array = [parseClass performSelector:parseJsonArraySelector withObject:jsonArray];
-//                    NSLog(@"parsed list");
-                    [delegate performSelector:successSelector withObject:array];
+                    //                    NSLog(@"parsed list");
+                    [self callSelector:successSelector onDelegate:delegate withObject:array];
 #pragma clang diagnostic pop
-                }else
-                    NSLog(@"parseClass cannot respond to %@, class: %@", NSStringFromSelector(parseJsonArraySelector), parseClass);
+                }else{
+                    DLog(@"parseClass cannot respond to %@, class: %@", NSStringFromSelector(parseJsonArraySelector), parseClass);
+                }
             }else
-                NSLog(@"cannot send list to delegate: %@, doesnt repond to the specified successSelector: %@", NSStringFromClass([delegate class]), NSStringFromSelector(successSelector));
+                DLog(@"cannot send list to delegate: %@, doesnt repond to the specified successSelector: %@", NSStringFromClass([delegate class]), NSStringFromSelector(successSelector));
         }else{
             NSDictionary *d = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&e];
-//            NSLog(@"got Dictionary");
+            //            NSLog(@"got Dictionary");
             if (e != nil) {
                 [self doJsonError:data error:e];
             }else if ([delegate respondsToSelector:successSelector]) {
-                NSLog(@"responds to success selector: %@", NSStringFromSelector(successSelector));
+                //                DLog(@"responds to success selector: %@", NSStringFromSelector(successSelector));
                 if ([parseClass respondsToSelector:initObjectWithDictionary]) {
-//                    NSLog(@"parseClass responds to selector: %@", NSStringFromSelector(initObjectWithDictionary));
-//                    NSLog(@"%@", d);
+                    //                    NSLog(@"parseClass responds to selector: %@", NSStringFromSelector(initObjectWithDictionary));
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-                    [delegate performSelector:successSelector withObject:[parseClass performSelector:initObjectWithDictionary withObject:d]];
+                    [self callSelector:successSelector onDelegate:delegate withObject:[parseClass performSelector:initObjectWithDictionary withObject:d]];
 #pragma clang diagnostic pop
-                }else
-                    NSLog(@"parseClass: %@, cant respond to selector: %@", NSStringFromClass([parseClass class]), NSStringFromSelector(initObjectWithDictionary));
-            }else
-                NSLog(@"cannot send result to delegate %@", NSStringFromClass([delegate class]));
+                }else{
+                    DLog(@"parseClass: %@, cant respond to selector: %@", NSStringFromClass([parseClass class]), NSStringFromSelector(initObjectWithDictionary));
+                }
+            }else{
+                DLog(@"cannot send result to delegate %@", NSStringFromClass([delegate class]));
+            }
         }
         cleanUp();
     };
     return success;
-}
-
-
-
-#pragma mark - Generic Functions
-
--(void)makeRequestWithVerb:(NSString *)verb forUrl:(NSString *)url bodyDictionary:(NSDictionary *)bodyDictionary bodyData:(NSData *)bodyData authDelegate:(id<DAOManagerDelegateProtocol>)delegate contentType:(NSString *)contentType requestType:(NSInteger)type success:(void (^)(NSData *, void(^)()))success error:(void (^)(NSData *, NSError *, void(^)()))error then:(void (^)(NSData *, NSURLConnectionWithExtras *, NSProgress *))then{
-    
-    NSLog(@"making %@ request to url:%@, by: %@", verb, url, NSStringFromClass([delegate class]));
-    NSError *e = nil;
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-    [req setHTTPMethod:verb];
-    
-    [self addBodyDataToRequest:req bodyDictionary:bodyDictionary bodyData:bodyData contentType:contentType error:&e];
-    
-    if (e != nil) {
-        NSLog(@"make post reuqest error: %@", e.localizedDescription);
-    }else{
-        [callQueue addObject:[CallQueue initWithRequest:req authDelegate:delegate requestType:type success:success error:error then:then]];
-        [self doFetchQueue];
-    }
-}
-
--(void)addBodyDataToRequest:(NSMutableURLRequest *)req bodyDictionary:(NSDictionary *)bodyDictionary bodyData:(NSData *)bodyData contentType:(NSString *)contentType error:(NSError *__autoreleasing *)e{
-    
-    if(bodyData != nil && bodyDictionary != nil)
-        NSLog(@"Warning! You defined body data and body dictionary. The dictionary-->data will replace the data you specified");
-    
-    if(bodyDictionary)
-        bodyData = [NSJSONSerialization dataWithJSONObject:bodyDictionary options:0 error:e];
-    
-    if(bodyData){
-        [req setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[bodyData length]] forHTTPHeaderField:@"Content-Length"];
-        if (contentType == nil) {
-            NSLog(@"content type was nil, setting to default of application/json");
-            contentType = @"application/json";
-        }
-        
-        [req setValue:contentType forHTTPHeaderField:@"Content-Type"];
-        [req setHTTPBody:bodyData];
-    }
-}
-
--(void)genericGetFunctionForDelegate:(id<DAOManagerDelegateProtocol>)delegate forUrl:(NSString *)url requestType:(NSInteger)type success:(void (^)(NSData *, void(^)()))success error:(void (^)(NSData *, NSError *, void(^)()))error then:(void (^)(NSData *, NSURLConnectionWithExtras *, NSProgress *))then{
-    
-    NSLog(@"making GET request to url:%@, by: %@", url, NSStringFromClass([delegate class]));
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-    [callQueue addObject:[CallQueue initWithRequest:req authDelegate:delegate requestType:(NSInteger)type success:success error:error then:then]];
-    [self doFetchQueue];
-}
-
--(void)genericListGetForDelegate:(id)delegate url:(NSString *)url selector:(SEL)selector parseClass:(Class)parseClass requestType:(NSInteger)type{
-    [self genericGetFunctionForDelegate:delegate forUrl:url requestType:type success:[self successTemplateForDelegate:delegate selectorOnSuccess:selector parseClass:parseClass resultIsArray:YES] error:nil then:nil];
-}
-
--(void)genericObjectGetForDelegate:(id)delegate url:(NSString *)url selector:(SEL)selector parseClass:(Class)parseClass requestType:(NSInteger)type{
-    [self genericGetFunctionForDelegate:delegate forUrl:url requestType:type success:[self successTemplateForDelegate:delegate selectorOnSuccess:selector parseClass:parseClass resultIsArray:NO] error:nil then:nil];
 }
 
 
@@ -212,36 +184,124 @@ enum{
 }
 
 -(void)doFetchQueue{
-//    NSLog(@"doing fetch queue");
+//    if (!self.hasInternetConnection) {
+//        //		[NSException raise:@"Should have internet here always" format:@"asdf"];
+//        return;
+//    }
+    //    NSLog(@"doing fetch queue, %hhd, %hhd", tryingToAuthenticate, blockingRequestRunning);
     for (int i = 0; i < 10; i++) {// loop through all the priorities
         for (CallQueue *cq in callQueue) {
-            if (!cq.alreadySent && cq.type == i) {
-                [self doRequest:cq];
+            if(![self.authDelegate isTryingToAuthenticate] && !blockingRequestRunning){
+                if (!cq.alreadySent && cq.type == i) {
+                    
+//                    if (!self.hasInternetConnection) {
+//                        // send the request back by calling the error on it
+//                        void (^cleanUp)() = ^void(){
+//                            
+//                        };
+//                        cq.alreadySent = YES;
+//                        NSError *error = nil;
+//                        cq.error(nil, error, cleanUp);
+//                        
+//                    }else{
+                        if(i < 6)// everything under 6 is a blocking request priority
+                            blockingRequestRunning = YES;
+                        [self doRequest:cq];
+                        return;
+//                    }
+                }
+            }else
                 return;
-            }
         }
     }
 }
 
 -(void)fetchQueueTimerFinish{
+    blockingRequestRunning = false;
     [self runRequestQueue];
 }
 
-// Initialize Connection
 -(void)doRequest:(CallQueue *)cq{
-    cq.alreadySent = true;
+    //    DLog(@"doing request");
+    if (cq.authDelegate != nil && self.authDelegate != nil && [self.authDelegate isAuthenticationNil]) {
+        DLog(@"THIS SHOULDNT HAPPEN: auth is nil, show login");
+        [self.authDelegate showLoginUsingDelegate:cq.authDelegate whenAuthIsReady:^void(){
+            [self doFetchQueue];
+        }];
+    }else{
+        //        DLog(@"going to try to authorize");
+        cq.alreadySent = true;
+        [self incrementNetworkActivity];
+        //		DLog(@"auth: %@", self.auth);
+        
+        
+        
+        void(^afterAuth)(NSError *) = ^void(NSError *error){
+            
+            if (self.authDelegate != nil) {
+                DLog(@"token: %@", [self.authDelegate tokenForTokenInfo]);
+            }
+            
+            if (error == nil) {// success
+                //				NSLog(@"%@", [cq.request allHTTPHeaderFields]);
+                if (self.authDelegate != nil) {
+                    [self.authDelegate setTryingToAuthenticate:NO];
+                }
                 
-    NSURLConnectionWithExtras *connectionObject = [NSURLConnectionWithExtras connectionWithRequest:cq.request delegate:self startImmediately:YES uniqueTag:[self getConnectionNumber] finalDelegate:cq.delegate success:cq.success error:cq.error then:cq.then];
-    [connections setObject:connectionObject forKey:connectionNumber];
-    
-    [self doThenWithData:nil connection:connectionObject];// hand back the connection object so it can be canceled if desired
-    
-    [self doFetchQueue];
+                if(cq.type == AppendTokenType){
+                    [cq.request setURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@?access_token=%@", cq.request.URL.absoluteString, [self.authDelegate tokenForTokenInfo]]]];
+                }
+                
+                //				[cq.request setValue:[NSString stringWithFormat:@"Bearer %@", self.dummyAccessToken] forHTTPHeaderField:@"Authorization"];
+                NSURLConnectionWithExtras *connectionObject = [NSURLConnectionWithExtras connectionWithRequest:cq.request delegate:self startImmediately:YES uniqueTag:[self getConnectionNumber] finalDelegate:cq.delegate success:cq.success error:cq.error then:cq.then];
+                [connections setObject:connectionObject forKey:connectionNumber];
+                
+                
+                [self doThenWithData:nil connection:connectionObject];// hand back the connection object so it can be canceled if desired
+                
+                [self doFetchQueue];
+            }else{
+                [self decrementNetworkActivity];
+                DLog(@"failed to authorize request, %@", error.localizedDescription);
+                DLog(@"errorCode: %ld", (long)error.code);
+                cq.alreadySent = false;
+                switch (error.code) {
+                    case -1009:
+                        DLog(@"Cant connect to the internet");
+                        blockingRequestRunning = true;
+                        [self.timers addObject:[NSTimer scheduledTimerWithTimeInterval:1.0f target:self selector:@selector(fetchQueueTimerFinish) userInfo:nil repeats:NO]];
+                        break;
+                        
+                    case -1000:
+                        DLog(@"User closed the login modal before logging in");
+                    default:
+                        if (![self.authDelegate canAuthAuthorize]) {
+                            DLog(@"auth cannot authorize");
+                            if (self.authDelegate != nil) {
+                                [self.authDelegate showLoginUsingDelegate:cq.authDelegate whenAuthIsReady:^void(){
+                                    [self doFetchQueue];
+                                }];
+                            }
+                        }else{
+                            DLog(@"trying again imediately");
+                            [self doRequest:cq];
+                        }
+                        break;
+                }
+            }
+        };
+        
+        if (self.authDelegate != nil) {
+            [self.authDelegate authorizeRequest:cq.request completionHandler:afterAuth];
+        }else{
+            afterAuth(nil);
+        }
+    }
 }
 
 -(void)doJsonError:(NSData *)data error:(NSError *)error{
-    NSLog(@"error deserializing json array, %@", error.localizedDescription);
-    NSLog(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+    DLog(@"error deserializing json array, %@", error.localizedDescription);
+    DLog(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
     NSXMLParser *p = [[NSXMLParser alloc] initWithData:data];
     [p setDelegate:self];
     [p parse];
@@ -251,9 +311,8 @@ enum{
 #pragma mark - Execute block convenience functions
 
 -(void)doThenWithData:(NSData *)data connection:(NSURLConnectionWithExtras *)connection{
-    if (connection.then != nil) {
+    if (connection.then != nil)
         connection.then(data, connection, connection.nsProgress);
-    }
 }
 
 -(void)doErrorWithData:(NSData *)data error:(NSError *)error forConnection:(NSURLConnectionWithExtras *)connection{
@@ -273,17 +332,16 @@ enum{
 
 #pragma mark - Connection Handling
 -(void)connection:(NSURLConnectionWithExtras *)connection didReceiveData:(NSData *)data{
-    //    NSLog(@"saving data for unique tag: %@", connection.uniqueTag);
+    //	NSLog(@"saving data for unique tag: %@", connection.uniqueTag);
     
     if ([dataFromConnectionByTag objectForKey:connection.uniqueTag] == nil) {
-        NSLog(@"created new connection data for tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
+        //        DLog(@"created new connection data for tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
         NSMutableData *newData = [[NSMutableData alloc] initWithData:data];
         [dataFromConnectionByTag setObject:newData forKey:connection.uniqueTag];
-        connection.nsProgress.completedUnitCount += data.length;// first time
-        
+        connection.nsProgress.completedUnitCount = data.length;// first time
         return;
     }else{
-//        NSLog(@"saving data for connection tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
+        //        NSLog(@"saving data for connection tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
         [[dataFromConnectionByTag objectForKey:connection.uniqueTag] appendData:data];
         connection.nsProgress.completedUnitCount += data.length;
         [self doThenWithData:[dataFromConnectionByTag objectForKey:connection.uniqueTag] connection:connection];
@@ -297,9 +355,8 @@ enum{
 }
 
 - (void) connection:(NSURLConnectionWithExtras *)connection didReceiveResponse:(NSURLResponse *)response{
-    NSLog(@"did recieve response");
+    //    DLog(@"did recieve response");
     if([response isKindOfClass:[NSHTTPURLResponse class]]){
-        NSLog(@"in here");
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         [connection setStatusCodeForNow:[httpResponse statusCode]];
         //        if ([connection.typeTag isEqualToNumber:typeUserExists]) {
@@ -317,17 +374,15 @@ enum{
         
         // NSProgress
         connection.nsProgress.totalUnitCount = response.expectedContentLength;
-        NSLog(@"expected content length: %ld", (long)response.expectedContentLength);
-        connection.nsProgress.completedUnitCount = 0.0f;
         [self doThenWithData:[dataFromConnectionByTag objectForKey:connection.uniqueTag] connection:connection];
     }
 }
 
 -(void)connectionDidFinishLoading:(NSURLConnectionWithExtras *)connection{
-    NSLog(@"connection did finish loading");
-    
+    //    DLog(@"connection did finish loading");
+    [self decrementNetworkActivity];
     void (^cleanUp)() = ^void(){
-        NSLog(@"connection finished for tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
+        //        DLog(@"connection finished for tag: %@, url: %@", connection.uniqueTag, connection.originalRequest.URL);
         [dataFromConnectionByTag removeObjectForKey:connection.uniqueTag]; // after done using the data, remove it
         [connections removeObjectForKey:connection.uniqueTag];// remove the connection
         [self doFetchQueue];
@@ -345,25 +400,36 @@ enum{
 }
 
 -(void)connection:(NSURLConnectionWithExtras *)conn didFailWithError:(NSError *)error{
-    [self doErrorWithData:nil error:error forConnection:conn];
+    [self decrementNetworkActivity];
     
     // DO A GLOBAL ERROR HANDLER FOR NOW FOR MY DAO
     
     NSString *errorString = [NSString stringWithFormat:@"Fetch failed for url: %@, error: %@", conn.originalRequest.URL.absoluteString, [error localizedDescription]];
-    UIAlertView *av = [[UIAlertView alloc] initWithTitle:@"Error" message:errorString delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
-    [av show];
+    DLog(@"Underlying Error: %@, error: %@", [[error userInfo] objectForKey:@"NSUnderlyingError"], errorString);
+    
+    NSRange range = [errorString rangeOfString:@"The Internet connection appears to be offline"];
+    if (range.location != NSNotFound) {
+        self.hasInternetConnection = NO;
+    }
+    //    UIAlertView *av = [[UIAlertView alloc] initWithTitle:@"Error" message:errorString delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+    //    [av show];
+    [self doErrorWithData:nil error:error forConnection:conn];
 }
 
 #pragma mark - XML Parser error functions
 
 - (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
-    self.error = [NSString stringWithFormat:@"error%@, %@", self.error, string];
+    networkErrorMessage = [NSString stringWithFormat:@"error%@, %@", networkErrorMessage, string];
 }
 
 -(void)parserDidEndDocument:(NSXMLParser *)parser{
-    NSLog(@"error: %@", self.error);
-    self.error = @"";
+    DLog(@"error: %@", networkErrorMessage);
+    networkErrorMessage = @"";
 }
+
+
+
+
 
 
 @end

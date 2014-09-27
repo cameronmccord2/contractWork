@@ -2,7 +2,7 @@
 //  Captions.h
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
@@ -15,7 +15,7 @@
 
 @property (nonatomic, retain) NSString * caption;
 @property (nonatomic, retain) NSNumber * endTime;
-@property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSNumber * captionId;
 @property (nonatomic, retain) NSNumber * languageId;
 @property (nonatomic, retain) NSNumber * mediaId;
 @property (nonatomic, retain) NSNumber * startTime;

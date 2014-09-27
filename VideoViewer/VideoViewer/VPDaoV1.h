@@ -6,36 +6,43 @@
 //  Copyright (c) 2013 McCord Inc. All rights reserved.
 //
 
-#import "DAOManager.h"
+#import "DAOManager+Protected.h"
 #import "Medias.h"
+#import "LoadProperties+Extras.h"
 #import "SubPopups.h"
 
-@protocol VPDaoV1DelegateProtocol <DAOManagerDelegateProtocol>
+// Internet change broadcast values
+static NSString *HAS_INTERNET = @"HasInternet";
+static NSString *HAS_NO_INTERNET = @"HasNoInternet";
+static NSString *LOG_ON_MAIN_THREAD = @"logOnMainThread";
 
-@optional
+// file types
+static NSString *FileTypeFromMTC = @"fromMTC";
+static NSString *FileTypeFromUser = @"fromUser";
 
--(void)gotMedias;
--(void)errorGettingMedias;
--(void)videoDataThen:(NSURLConnectionWithExtras *)connection progress:(NSProgress *)progress;
--(void)imageDataThen:(NSURLConnectionWithExtras *)connection progress:(NSProgress *)progress;
--(void)filePathForRequestedFile:(NSString *)filePath;
--(void)fileDataForRequestedFile:(NSData *)fileData;
--(void)fileDataForRequestedImage:(NSData *)imageData;
-
-@end
+// file status
+static NSString *LoadStatusNone = @"noLoadStatus";
+static NSString *LoadStatusNotDownloaded = @"notDownloaded";
+static NSString *LoadStatusDownloaded = @"downloaded";
+static NSString *LoadStatusDownloading = @"downloading";
+static NSString *LoadStatusTryDownloadingLater = @"tryDownloadingLater";
+static NSString *LoadStatusNotUploaded = @"notUploaded";
+static NSString *LoadStatusUploading = @"uploading";
+static NSString *LoadStatusUploaded = @"uploaded";
+static NSString *LoadStatusTryUploadingLater = @"tryUploadingLater";
 
 
 @interface VPDaoV1 : DAOManager{
-    NSString *videoFilePath;
-    NSString *imagesFilePath;
+    NSString *saveFilePath;
 }
 
 
 
 +(instancetype)sharedManager;
--(void)getMedias:(id<VPDaoV1DelegateProtocol>)delegate forContext:(NSManagedObjectContext *)context reload:(BOOL)reload;
--(void)getVideoData:(id<VPDaoV1DelegateProtocol>)delegate media:(Medias *)media;
--(void)getPopupData:(id<VPDaoV1DelegateProtocol>)delegate popup:(Popups *)popup;
--(void)getImageData:(id<VPDaoV1DelegateProtocol>)delegate subPopup:(SubPopups *)sub;
+
+-(void)setLoadStatus:(NSString *)loadStatus forLoadProperties:(LoadProperties *)loadProperties;
+
+
+-(void)getFilesThatDontExistForDelegate:(id)delegate inContext:(NSManagedObjectContext *)context; // this is for the developer to easily get all the needed files
 
 @end

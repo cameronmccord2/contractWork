@@ -2,7 +2,7 @@
 //  Popups.m
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
@@ -14,14 +14,9 @@
 
 @implementation Popups
 
-@dynamic bucketId;
-@dynamic bucketName;
 @dynamic displayName;
 @dynamic endTime;
-@dynamic extension;
-@dynamic filename;
-@dynamic filenameInBucket;
-@dynamic id;
+@dynamic popupId;
 @dynamic languageId;
 @dynamic mediaId;
 @dynamic popupText;

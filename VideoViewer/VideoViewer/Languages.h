@@ -2,7 +2,7 @@
 //  Languages.h
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
@@ -15,8 +15,7 @@
 
 @property (nonatomic, retain) NSString * code1;
 @property (nonatomic, retain) NSString * code2;
-@property (nonatomic, retain) NSNumber * id;
-@property (nonatomic, retain) NSString * mtcId;
+@property (nonatomic, retain) NSNumber * languageId;
 @property (nonatomic, retain) NSString * name;
 @property (nonatomic, retain) NSString * nativeName;
 @property (nonatomic, retain) NSSet *captions;

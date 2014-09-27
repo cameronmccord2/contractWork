@@ -14,13 +14,15 @@
 // TODO add play button
 @end
 
-@implementation PopupDetailsViewController
+@implementation PopupDetailsViewController{
+    NSManagedObjectContext *context;
+}
 
-- (instancetype)initWithPopup:(Popups *)popup context:(NSManagedObjectContext *)context{
+- (instancetype)initWithPopup:(Popups *)popup context:(NSManagedObjectContext *)managedObjectContext {
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
         self.popup = popup;
-        self.managedObjectContext = context;
+        context = managedObjectContext;
         self.automaticallyAdjustsScrollViewInsets = NO;
         [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -29,7 +31,7 @@
                                                    object:[UIDevice currentDevice]];
         
         // Core Data init stuff
-        NSString *predicateString = [NSString stringWithFormat:@"(popupId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(id IN $ids)", self.popup.id];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
+        NSString *predicateString = [NSString stringWithFormat:@"(popupId == %@) AND ($currentTime < endTime) AND (startTime =< $currentTime) AND NOT(popupId IN $ids)", self.popup.popupId];//@"NOT (id IN $currentIds) && startTime < $currentTime && endTime > $currentTime"
         self.predicate = [NSPredicate predicateWithFormat:predicateString];
         self.variablesDictionary = [NSMutableDictionary dictionaryWithObjectsAndKeys:0,@"currentTime", [[NSMutableArray alloc] init],@"ids", nil];
         
@@ -39,18 +41,14 @@
 
 - (void)viewDidLoad{
     [super viewDidLoad];
-    [[VPDaoV1 sharedManager] getPopupData:self popup:self.popup];
+//    [[VPDaoV1 sharedManager] getPopupData:self popup:self.popup];
 }
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
+    if([self.player isPlaying])
+        [self.player stop];
     self.player = nil;
-    NSLog(@"will return");
-    [self.delegate willReturn];
-}
-
--(void)setWillReturnDelegate:(id<PopupDetailsViewControllerDelegate>)delegate{
-    self.delegate = delegate;
 }
 
 - (void)didReceiveMemoryWarning{
@@ -296,7 +294,7 @@
         self.imageView = [[UIImageView alloc] initWithFrame:[self getImageFrame]];
         [self.imageView setBackgroundColor:[UIColor whiteColor]];
         [self.scrollView addSubview:self.imageView];
-        [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
+//        [[VPDaoV1 sharedManager] getImageData:self subPopup:sub];
         labelWidth = [self screenWidth] / 2;
         [self.scrollView setFrame:[self getScrollViewFrameWithImage]];
         labelWidth = [self getLabelWidthWithImage];
@@ -307,7 +305,7 @@
     
     self.descriptionLabel = [[UILabel alloc] initWithFrame:[self getLabelFrameForText:subPopupText width:labelWidth font:[self getDescriptionLabelFont]]];
     [self.descriptionLabel setNumberOfLines:0];
-    self.descriptionLabel.tag = [sub.id integerValue];
+    self.descriptionLabel.tag = [sub.subPopupId integerValue];
     
     [self.descriptionLabel setFrame:CGRectMake(10, labelTopPad, labelWidth, self.descriptionLabel.frame.size.height + 30)];
     
@@ -354,7 +352,7 @@
         return _fetchedResultsController;
     
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:self.entity inManagedObjectContext:self.managedObjectContext];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:self.entity inManagedObjectContext:context];
     
     [fetchRequest setEntity:entity];
     
@@ -365,7 +363,7 @@
     [fetchRequest setPredicate:[self.predicate predicateWithSubstitutionVariables:self.variablesDictionary]];
     
     // Create and initialize the fetch results controller.
-    _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:self.managedObjectContext sectionNameKeyPath:nil cacheName:nil];
+    _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest managedObjectContext:context sectionNameKeyPath:nil cacheName:nil];
     _fetchedResultsController.delegate = self;
     return _fetchedResultsController;
 }

@@ -9,12 +9,8 @@
 #import <UIKit/UIKit.h>
 #import "VPDaoV1.h"
 
-@interface VideoListTableViewController : UITableViewController<NSFetchedResultsControllerDelegate, VPDaoV1DelegateProtocol, UIAlertViewDelegate>
+@interface VideoListTableViewController : UITableViewController
 
-@property (nonatomic, strong) NSFetchedResultsController *fetchedResultsController;
-@property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
-@property(nonatomic, strong)UIAlertView *alert;
-
--(instancetype)initWithContext:(NSManagedObjectContext *)context;
+-(instancetype)initWithContext:(NSManagedObjectContext *)managedObjectContext;
 
 @end

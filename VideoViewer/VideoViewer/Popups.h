@@ -2,25 +2,21 @@
 //  Popups.h
 //  VideoViewer
 //
-//  Created by Cameron McCord on 5/10/14.
+//  Created by Cameron McCord on 9/27/14.
 //  Copyright (c) 2014 Cameron McCord. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
+#import "AwsFile.h"
 
 @class Languages, Medias, SubPopups;
 
-@interface Popups : NSManagedObject
+@interface Popups : AwsFile
 
-@property (nonatomic, retain) NSNumber * bucketId;
-@property (nonatomic, retain) NSString * bucketName;
 @property (nonatomic, retain) NSString * displayName;
 @property (nonatomic, retain) NSNumber * endTime;
-@property (nonatomic, retain) NSString * extension;
-@property (nonatomic, retain) NSString * filename;
-@property (nonatomic, retain) NSString * filenameInBucket;
-@property (nonatomic, retain) NSNumber * id;
+@property (nonatomic, retain) NSNumber * popupId;
 @property (nonatomic, retain) NSNumber * languageId;
 @property (nonatomic, retain) NSNumber * mediaId;
 @property (nonatomic, retain) NSString * popupText;
