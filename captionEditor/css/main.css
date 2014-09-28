@@ -106,8 +106,8 @@
 	border: 1px solid black;
 }
 .iPad .subPopupText{
-	width:365px;
-	height:670px;
+	width:354px;
+	height:650px;
 	float:left;
 	overflow: auto;
 	margin-left:15px;
@@ -119,7 +119,9 @@
 	height:670px;
 	float:left;
 	overflow: auto;
-	margin: 5px;
+	margin-left:15px;
+	margin-top: 20px;
+	font-size: 25px;
 }
 .playerControlsBar{
 	width:100%;
