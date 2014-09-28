@@ -18,6 +18,8 @@
 
 NSString *DATAFILE_FILENAME = @"trainerV0";
 
+#warning Fix memory leaks
+
 @interface VideoListTableViewController ()
 
 @end
@@ -104,16 +106,26 @@ NSString *DATAFILE_FILENAME = @"trainerV0";
     [self.tableView reloadData];
     
     Medias *media = [medias firstObject];
-    if(media)
+
+//    UILabel *titleLabel = [UILabel new];
+//    [titleLabel setBackgroundColor:[UIColor whiteColor]];
+//    [titleLabel setTextAlignment:NSTextAlignmentCenter];
+//    [self.navigationItem setTitleView:titleLabel];
+//    if(media)
+//        [titleLabel setText:[NSString stringWithFormat:@"%@ Videos", media.language.name]];
+    if (media) {
         [self.navigationItem setTitle:[NSString stringWithFormat:@"%@ Videos", media.language.name]];
+    }
     self.navigationController.navigationBar.barTintColor = [UIColor flagGreen];
     self.navigationController.navigationBar.alpha = 1.0f;
     self.navigationController.navigationBar.translucent = YES;
+    
+    [self.navigationController.navigationBar setBarStyle:UIBarStyleBlack];
 
-    NSDictionary *attrs = @{NSFontAttributeName:[UIFont systemFontOfSize:22.0f]};
+    NSDictionary *attrs = @{NSFontAttributeName:[UIFont systemFontOfSize:22.0f], NSForegroundColorAttributeName:[UIColor whiteColor]};
     [[UINavigationBar appearance] setTitleTextAttributes:attrs];
     
-    [self.tableView setBackgroundColor:[UIColor lightBlue]];
+//    [self.tableView setBackgroundColor:[UIColor lightBlue]];
 }
 
 #pragma mark - Table view data source
@@ -141,7 +153,7 @@ NSString *DATAFILE_FILENAME = @"trainerV0";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"myCell"];
     if (cell == nil){
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"myCell"];
-        [cell setBackgroundColor:[UIColor lightBlue]];
+//        [cell setBackgroundColor:[UIColor lightBlue]];
 //        UILabel *cellTitleLabel = [UILabel new];
 
     }

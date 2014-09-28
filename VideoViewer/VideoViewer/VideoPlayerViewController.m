@@ -57,6 +57,7 @@ enum {
     
     [self registerForVideoPlayerNotifications];
     
+    [self.navigationController.navigationBar setTintColor:[UIColor whiteColor]];
     [self.view setBackgroundColor:[UIColor whiteColor]];
     
     self.tableView = [UITableView new];
@@ -158,10 +159,17 @@ enum {
 - (void)didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+    if (player.playbackState == MPMoviePlaybackStatePlaying) {
+        [player pause];
+    }
+    [self stopTimer];
+    player = nil;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    [self registerForVideoPlayerNotifications];
+    
     if(firstTimeOnPage){
         [player play];// we dont want this to happen when returning from the details
         firstTimeOnPage = NO;
@@ -203,7 +211,13 @@ enum {
             NSLog(@"stopped");
             
         case MPMoviePlaybackStatePaused:
-            NSLog(@"pause");
+            NSLog(@"pause, time: %f, %f", [player currentPlaybackTime], player.duration);
+            if ([player currentPlaybackTime] == player.duration || [player currentPlaybackTime] == 0) {
+                [captionLabel setText:@""];
+                currentCaption = nil;
+            }
+            
+#warning change this so it only takes away the caption at the e
             // stop timers
             if (timer) {
                 [timer invalidate];
@@ -282,7 +296,7 @@ enum {
 #pragma mark UITableViewDelegate and Datasource Functions
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
     [player pause];
     
     Popups *popup = [popups objectAtIndex:[indexPath section]];
@@ -410,7 +424,7 @@ enum {
 
 -(UIFont *)getCaptionFont{
     if([self isIpad])
-        return [UIFont systemFontOfSize:18.0f];
+        return [UIFont systemFontOfSize:28.0f];
     return [UIFont systemFontOfSize:14.0f];
 }
 

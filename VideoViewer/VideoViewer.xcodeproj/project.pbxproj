@@ -135,6 +135,7 @@
 		E4625DC119D6C074003C416A /* vpavr24gb4e2pq0eqsgbfuh2bf.png in Resources */ = {isa = PBXBuildFile; fileRef = E4625D6319D6C074003C416A /* vpavr24gb4e2pq0eqsgbfuh2bf.png */; };
 		E4625DC219D6C074003C416A /* vr5j57j2crudnm9esmfkhog0av.png in Resources */ = {isa = PBXBuildFile; fileRef = E4625D6419D6C074003C416A /* vr5j57j2crudnm9esmfkhog0av.png */; };
 		E4625DC519D79638003C416A /* NSAttributedString+Scale.m in Sources */ = {isa = PBXBuildFile; fileRef = E4625DC419D79638003C416A /* NSAttributedString+Scale.m */; };
+		E4625DCA19D79C33003C416A /* EasyTouchSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = E4625DC919D79C33003C416A /* EasyTouchSlider.m */; };
 		E474D8DF1938050700B4DE14 /* HighlightButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E474D8DE1938050700B4DE14 /* HighlightButton.m */; };
 		E474D8E119381D2E00B4DE14 /* libGoogleAnalyticsServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E474D8E019381D2E00B4DE14 /* libGoogleAnalyticsServices.a */; };
 		E4D5605118FF9A1100263AC4 /* VideoListTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4D5605018FF9A1100263AC4 /* VideoListTableViewController.m */; };
@@ -328,6 +329,8 @@
 		E4625D6419D6C074003C416A /* vr5j57j2crudnm9esmfkhog0av.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = vr5j57j2crudnm9esmfkhog0av.png; path = assets/vr5j57j2crudnm9esmfkhog0av.png; sourceTree = "<group>"; };
 		E4625DC319D79638003C416A /* NSAttributedString+Scale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSAttributedString+Scale.h"; sourceTree = "<group>"; };
 		E4625DC419D79638003C416A /* NSAttributedString+Scale.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSAttributedString+Scale.m"; sourceTree = "<group>"; };
+		E4625DC819D79C33003C416A /* EasyTouchSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EasyTouchSlider.h; sourceTree = "<group>"; };
+		E4625DC919D79C33003C416A /* EasyTouchSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EasyTouchSlider.m; sourceTree = "<group>"; };
 		E474D8DD1938050700B4DE14 /* HighlightButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HighlightButton.h; sourceTree = "<group>"; };
 		E474D8DE1938050700B4DE14 /* HighlightButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HighlightButton.m; sourceTree = "<group>"; };
 		E474D8E019381D2E00B4DE14 /* libGoogleAnalyticsServices.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libGoogleAnalyticsServices.a; sourceTree = "<group>"; };
@@ -575,6 +578,15 @@
 			name = "View Controllers";
 			sourceTree = "<group>";
 		};
+		E4625DC619D79BEE003C416A /* Subclasses */ = {
+			isa = PBXGroup;
+			children = (
+				E4625DC819D79C33003C416A /* EasyTouchSlider.h */,
+				E4625DC919D79C33003C416A /* EasyTouchSlider.m */,
+			);
+			name = Subclasses;
+			sourceTree = "<group>";
+		};
 		E4D5605818FFA81600263AC4 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -601,6 +613,7 @@
 		E4D5607F18FFB3CC00263AC4 /* Extra classes */ = {
 			isa = PBXGroup;
 			children = (
+				E4625DC619D79BEE003C416A /* Subclasses */,
 				E4625C9B19D6856C003C416A /* UIColor+AppColors.h */,
 				E4625C9C19D6856C003C416A /* UIColor+AppColors.m */,
 				E4625C9D19D6856C003C416A /* UIFont+AppFonts.h */,
@@ -940,6 +953,7 @@
 				E4625CD319D6A404003C416A /* SubPopups+Extras.m in Sources */,
 				E4625CC319D69AA6003C416A /* CoreDataTemplates.m in Sources */,
 				E4625CCD19D6A154003C416A /* Captions+Extras.m in Sources */,
+				E4625DCA19D79C33003C416A /* EasyTouchSlider.m in Sources */,
 				E4D5606718FFAF4D00263AC4 /* VideoPlayerViewController.m in Sources */,
 				E4D5605118FF9A1100263AC4 /* VideoListTableViewController.m in Sources */,
 				E4625D0619D6B074003C416A /* SubPopups.m in Sources */,

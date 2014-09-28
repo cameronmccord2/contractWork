@@ -10,6 +10,7 @@
 #import "Popups.h"
 #import "SubPopups.h"
 #import "Files+Extras.h"
+#import "EasyTouchSlider.h"
 #import "NSAttributedString+Scale.h"
 
 @interface PopupDetailsViewController ()
@@ -43,6 +44,10 @@
 
 - (void)viewDidLoad{
     [super viewDidLoad];
+    
+    [self.view setBackgroundColor:[UIColor whiteColor]];
+    
+    self.title = [NSString stringWithFormat:@"%@ Explanation", popup.displayName];
 
     NSError *error = nil;
     if(!player){
@@ -53,10 +58,9 @@
         player = [[AVAudioPlayer alloc] initWithData:audioData fileTypeHint:AVFileTypeMPEGLayer3 error:&error];
         if(error)
             NSLog(@"avaudioplayer had an error: %@", [error localizedDescription]);
-        
+        else
+            [player setDelegate:self];
     }
-    
-    [self.view setBackgroundColor:[UIColor whiteColor]];
     
     // setup the content view
     contentView = [UIView new];
@@ -104,7 +108,7 @@
                                                              constant:0]];
     
     // setup audio control view
-    slider = [UISlider new];
+    slider = [EasyTouchSlider newWithExtraSize:10];
     slider.translatesAutoresizingMaskIntoConstraints = NO;
     slider.minimumValue = 0;
     slider.maximumValue = player.duration;
@@ -192,6 +196,14 @@
 
 - (void)didReceiveMemoryWarning{
     [super didReceiveMemoryWarning];
+}
+
+
+#pragma mark Player Notifications and Functions
+
+-(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+    DLog(@"did finish playing");
+    [playPauseButton setImage:[UIImage imageNamed:@"play.png"] forState:UIControlStateNormal];
 }
 
 -(void)timerTick {
