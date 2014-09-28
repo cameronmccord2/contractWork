@@ -10,6 +10,7 @@
 #import "Popups.h"
 #import "SubPopups.h"
 #import "Files+Extras.h"
+#import "NSAttributedString+Scale.h"
 
 @interface PopupDetailsViewController ()
 // TODO add play button
@@ -241,7 +242,10 @@
                                                                                     NSCharacterEncodingDocumentAttribute: @(NSUTF8StringEncoding)}
                                                                documentAttributes:nil
                                                                             error:nil];
-        [ats addAttributes:@{NSFontAttributeName: [UIFont systemFontOfSize:35.0], NSForegroundColorAttributeName: [UIColor blackColor]} range:NSMakeRange(0, ats.length)];
+        ats = [[ats attributedStringWithScale:35.0/12.0] mutableCopy];// 12 is the default nsattributedstring size, we want it to be 35 point
+        [ats beginEditing];
+        [ats addAttributes:@{NSForegroundColorAttributeName: [UIColor blackColor]} range:NSMakeRange(0, ats.length)];
+        [ats endEditing];
         [textLabel setAttributedText:ats];
         DLog(@"%@, %@", currentSubPopup.popupText, ats);
         // setup image for current subpopup
