@@ -106,11 +106,13 @@
 	border: 1px solid black;
 }
 .iPad .subPopupText{
-	width:374px;
+	width:365px;
 	height:670px;
 	float:left;
 	overflow: auto;
-	margin: 5px;
+	margin-left:15px;
+	margin-top: 20px;
+	font-size: 25px;
 }
 .iPad .subPopupTextNoImage{
 	width:758px;

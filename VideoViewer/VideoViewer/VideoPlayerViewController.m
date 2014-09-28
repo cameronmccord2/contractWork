@@ -57,12 +57,14 @@ enum {
     
     [self registerForVideoPlayerNotifications];
     
-    [self.view setBackgroundColor:[UIColor blackColor]];
+    [self.view setBackgroundColor:[UIColor whiteColor]];
     
     self.tableView = [UITableView new];
     [self.tableView setDelegate:self];
     [self.tableView setDataSource:self];
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.tableView setBackgroundColor:[UIColor clearColor]];
+    [self.tableView setSeparatorColor:[UIColor clearColor]];
     [self.view addSubview:self.tableView];
     
     // setup the video player
@@ -90,21 +92,43 @@ enum {
     
     NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(captionLabel);
     [player.view addConstraint:[NSLayoutConstraint constraintWithItem:captionLabel
-                                                             attribute:NSLayoutAttributeWidth
-                                                             relatedBy:NSLayoutRelationEqual
-                                                                toItem:player.view
-                                                             attribute:NSLayoutAttributeWidth
-                                                            multiplier:0.8f
-                                                              constant:0]];
+                                                            attribute:NSLayoutAttributeWidth
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:player.view
+                                                            attribute:NSLayoutAttributeWidth
+                                                           multiplier:0.8f
+                                                             constant:0]];
     
-    [player.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[captionLabel]|"
-                                                                        options:NSLayoutFormatAlignAllCenterX
-                                                                        metrics:0
-                                                                          views:viewsDictionary]];
+    [player.view addConstraint:[NSLayoutConstraint constraintWithItem:captionLabel
+                                                            attribute:NSLayoutAttributeBottom
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:player.view
+                                                            attribute:NSLayoutAttributeBottom
+                                                           multiplier:0.7f
+                                                             constant:0]];
+    
+    [player.view addConstraint:[NSLayoutConstraint constraintWithItem:captionLabel
+                                                            attribute:NSLayoutAttributeCenterX
+                                                            relatedBy:NSLayoutRelationEqual
+                                                               toItem:player.view
+                                                            attribute:NSLayoutAttributeCenterX
+                                                           multiplier:1.0f
+                                                             constant:0]];
+    
+    
+//    [player.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[captionLabel]-200-|"
+//                                                                        options:NSLayoutFormatAlignAllCenterX
+//                                                                        metrics:0
+//                                                                          views:viewsDictionary]];
+    
+//    [player.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[captionLabel]|"
+//                                                                        options:NSLayoutFormatAlignAllCenterX
+//                                                                        metrics:0
+//                                                                          views:viewsDictionary]];
     
     UIView *playerView = player.view;
     viewsDictionary = NSDictionaryOfVariableBindings(_tableView, playerView);
-    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_tableView][playerView]|"
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[_tableView]-[playerView]|"
                                                                       options:NSLayoutFormatAlignAllCenterY
                                                                       metrics:0
                                                                         views:viewsDictionary]];
@@ -117,6 +141,10 @@ enum {
                                                            constant:0]];
     [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_tableView]|"
                                                                       options:0
+                                                                      metrics:0
+                                                                        views:viewsDictionary]];
+    [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[playerView]|"
+                                                                      options:NSLayoutFormatAlignAllCenterY
                                                                       metrics:0
                                                                         views:viewsDictionary]];
 }
@@ -218,14 +246,19 @@ enum {
 
 -(void)scrollToPopup {
     float currentTime = [self currentPlayerTime];
-    NSArray *remainingPopups = [popups filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"startTime <= %f AND endTime > %f AND self != %@", currentTime, currentTime, currentPopup]];
+    NSArray *remainingPopups = [popups filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"startTime <= %f AND endTime > %f", currentTime, currentTime]];
     Popups *popup = [[remainingPopups sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"startTime" ascending:YES]]] firstObject];
     if (popup == nil)
         return;
 
     currentPopup = popup;// should only scroll once per popup
     NSUInteger index = [popups indexOfObject:popup];
-    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:index inSection:1] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+    [self.tableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:index] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+    
+#warning look into highlighting the cells as they are useful
+    // change the highlighting of the cell to indicate they are active
+//    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:[popups indexOfObject:popup]]];
+//    [cell.contentView setBackgroundColor:[UIColor greenColor]];
 }
 
 -(void)checkCaptions{
@@ -234,7 +267,7 @@ enum {
     if (currentTime != currentTime)
         currentTime = 0;// some weird nullness?
 
-    NSArray *filteredCaptions = [captions filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"%@ >= startTime AND endTime > %@ AND self != %@", currentTime, currentTime, currentCaption]];// start time has passed but end time hasnt so it must be on the screen
+    NSArray *filteredCaptions = [captions filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"%f >= startTime AND endTime > %f AND self != %@", currentTime, currentTime, currentCaption]];// start time has passed but end time hasnt so it must be on the screen
     filteredCaptions = [filteredCaptions sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:@"startTime" ascending:YES]]];
     
     Captions *caption = [filteredCaptions firstObject];
@@ -252,21 +285,31 @@ enum {
     
     [player pause];
     
-    Popups *popup = [popups objectAtIndex:[indexPath row]];
+    Popups *popup = [popups objectAtIndex:[indexPath section]];
     PopupDetailsViewController *pdvc = [[PopupDetailsViewController alloc] initWithPopup:popup context:context];
     [self.navigationController pushViewController:pdvc animated:YES];
 }
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return 1;
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    return 10.0f;
 }
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    UIView *header = [UIView new];
+    [header setBackgroundColor:[UIColor whiteColor]];
+    return header;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
     return [popups count];
 }
 
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return 1;
+}
+
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 30.0f;
+    return 35.0f;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -286,47 +329,80 @@ enum {
     
     UIColor *backgroundColor = [UIColor colorWithRed:0.094 green:0.609 blue:0.884 alpha:1];
     UIColor *highlightedColor = [UIColor colorWithRed:0.087 green:0.522 blue:0.754 alpha:1];
-        
-    HighlightButton *button = [HighlightButton new];
-    button.layer.borderWidth = 1.0;
-    button.layer.masksToBounds = YES;
-    button.layer.cornerRadius = 5.0;
-    button.layer.borderColor = backgroundColor.CGColor;
     
-    button.backgroundColorHighlighted = highlightedColor;
-    button.backgroundColorNormal = [UIColor whiteColor];
-    button.borderColorHighlighted = backgroundColor;
-    button.borderColorNormal = backgroundColor;
+    cell.layer.borderWidth = 1.0;
+    cell.layer.masksToBounds = YES;
+    cell.layer.cornerRadius = 5.0;
+    cell.layer.borderColor = backgroundColor.CGColor;
+//    cell.contentView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
     
-    [button setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
-    [button setTitleColor:backgroundColor forState:UIControlStateNormal];
-    
-    [button setBackgroundColor:[UIColor whiteColor]];
-    [button setTag:PopupButtonTag];
-    
-    [[button titleLabel] setFont:[self getPopupFont]];
-    
-    [cell.contentView addSubview:button];
+    UILabel *title = [UILabel new];
 
-    // autolayout
-    button.translatesAutoresizingMaskIntoConstraints = NO;
-    cell.translatesAutoresizingMaskIntoConstraints = NO;
-    NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(button);
     
-    [cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-5-[button]-5-|"
-                                                                 options:NSLayoutFormatAlignAllCenterY
-                                                                 metrics:0
-                                                                   views:viewsDictionary]];
-    [cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-3-[button]-3-|"
-                                                                 options:NSLayoutFormatAlignAllCenterX
-                                                                 metrics:0
-                                                                   views:viewsDictionary]];
+//    button.backgroundColorHighlighted = highlightedColor;
+//    button.backgroundColorNormal = [UIColor whiteColor];
+//    button.borderColorHighlighted = backgroundColor;
+//    button.borderColorNormal = backgroundColor;
+    
+//    [button setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
+    [title setTextColor:backgroundColor];
+#warning have the cell change background colors
+    
+    [title setBackgroundColor:[UIColor clearColor]];
+    
+    [title setFont:[self getPopupFont]];
+    [title setTextAlignment:NSTextAlignmentCenter];
+    [cell.contentView addSubview:title];
+    [title setTag:PopupButtonTag];
+    
+    // autolayout
+//    cell.contentView.translatesAutoresizingMaskIntoConstraints = NO;
+    title.translatesAutoresizingMaskIntoConstraints = NO;
+    UIView *cellView = cell.contentView;
+    NSDictionary *viewsDictionary = NSDictionaryOfVariableBindings(title, cellView);
+//    [cell.contentView setBackgroundColor:[UIColor blueColor]];
+//    [cell setBackgroundColor:[UIColor orangeColor]];
+    [cell.contentView addConstraint:[NSLayoutConstraint constraintWithItem:title
+                                                                 attribute:NSLayoutAttributeCenterX
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:cell.contentView
+                                                                 attribute:NSLayoutAttributeCenterX
+                                                                multiplier:1.0f
+                                                                  constant:0]];
+    
+    [cell.contentView addConstraint:[NSLayoutConstraint constraintWithItem:title
+                                                                 attribute:NSLayoutAttributeCenterY
+                                                                 relatedBy:NSLayoutRelationEqual
+                                                                    toItem:cell.contentView
+                                                                 attribute:NSLayoutAttributeCenterY
+                                                                multiplier:1.0f
+                                                                  constant:0]];
+    
+//    [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-5-[title]-5-|"
+//                                                                 options:NSLayoutFormatAlignAllCenterY
+//                                                                 metrics:0
+//                                                                   views:viewsDictionary]];
+//    [cell.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-3-[title]-3-|"
+//                                                                 options:NSLayoutFormatAlignAllCenterX
+//                                                                 metrics:0
+//                                                                   views:viewsDictionary]];
+//    [cell.contentView addConstraint:[NSLayoutConstraint constraintWithItem:title
+//                                                                  attribute:NSLayoutAttributeWidth
+//                                                                  relatedBy:NSLayoutRelationEqual
+//                                                                     toItem:cell.contentView
+//                                                                  attribute:NSLayoutAttributeWidth
+//                                                                 multiplier:0.9f
+//                                                                   constant:0]];
+//    [cell addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-[cellView]-|"
+//                                                                 options:NSLayoutFormatAlignAllCenterY
+//                                                                 metrics:0
+//                                                                   views:viewsDictionary]];
 }
 
 - (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
-    Popups *popup = [popups objectAtIndex:[indexPath row]];
-    HighlightButton *button = (HighlightButton *)[cell.contentView viewWithTag:PopupButtonTag];
-    [button setTitle:popup.displayName forState:UIControlStateNormal];
+    Popups *popup = [popups objectAtIndex:[indexPath section]];
+    UILabel *label = (UILabel *)[cell.contentView viewWithTag:PopupButtonTag];
+    [label setText:popup.displayName];
 }
 
 
